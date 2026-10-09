@@ -1,7 +1,7 @@
 import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import type { ListingMode, UserStatus, OrderStatus as PrismaOrderStatus } from "@prisma/client"
+import type { UserStatus, OrderStatus as PrismaOrderStatus } from "@prisma/client"
 
 const JWT_SECRET = process.env.JWT_SECRET || "88seven_jwt_secret"
 
@@ -846,7 +846,7 @@ export async function deductPartnerCommissionOnDelivery(partnerId: string, order
 }
 
 export async function updatePartnerListingMode(partnerId: string, listingMode: "free" | "wallet_required", minimumBalance: number) {
-  await prisma.user.update({ where: { id: partnerId }, data: { listingMode: listingMode as ListingMode, minimumBalance } })
+  await prisma.user.update({ where: { id: partnerId }, data: { listingMode: listingMode as any, minimumBalance } })
 }
 
 export function isPartnerVisible(partner: LaundryPartner, config: ListingModeConfig): boolean {
@@ -928,7 +928,7 @@ export async function updateHomeServiceProvider(id: string, data: Partial<Omit<H
 }
 
 export async function updateHomeServiceProviderListingMode(providerId: string, listingMode: "free" | "wallet_required", minimumBalance: number) {
-  await prisma.user.update({ where: { id: providerId }, data: { listingMode: listingMode as ListingMode, minimumBalance } })
+  await prisma.user.update({ where: { id: providerId }, data: { listingMode: listingMode as any, minimumBalance } })
 }
 
 export async function getHomeServiceProviderWalletBalance(providerId: string): Promise<number> {
@@ -1068,8 +1068,8 @@ export async function getListingModeConfig(): Promise<ListingModeConfig> {
 export async function updateListingModeConfig(config: ListingModeConfig) {
   await prisma.appSettings.upsert({
     where: { key: "listingMode" },
-    update: { defaultListingMode: config.defaultMode as ListingMode, defaultMinBalance: config.defaultMinBalance },
-    create: { key: "listingMode", defaultListingMode: config.defaultMode as ListingMode, defaultMinBalance: config.defaultMinBalance },
+    update: { defaultListingMode: config.defaultMode as any, defaultMinBalance: config.defaultMinBalance },
+    create: { key: "listingMode", defaultListingMode: config.defaultMode as any, defaultMinBalance: config.defaultMinBalance },
   })
 }
 
