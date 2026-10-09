@@ -35,5 +35,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status } })
   }
 
+  // Phone OTP verified by Firebase on client — this upserts the customer and returns a JWT
+  if (action === "phone-login") {
+    let user = await prisma.user.findFirst({ where: { phone, role: "customer" } })
+    if (!user) {
+      user = await prisma.user.create({
+        data: { phone, name: name || "", role: "customer", status: "active" }
+      })
+    } else if (name && !user.name) {
+      user = await prisma.user.update({ where: { id: user.id }, data: { name } })
+    }
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: "30d" })
+    return NextResponse.json({ token, user: { id: user.id, name: user.name, phone: user.phone, role: user.role, status: user.status } })
+  }
+
   return NextResponse.json({ error: "Invalid action" }, { status: 400 })
 }

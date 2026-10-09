@@ -1,18 +1,39 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useState, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { setAuth, getUser } from "@/lib/auth"
+import { initializeApp, getApps, getApp } from "firebase/app"
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth"
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+}
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
+const firebaseAuth = getAuth(app)
 
 function AuthPage() {
   const searchParams = useSearchParams()
   const redirect = searchParams.get("redirect") || "/"
   const defaultTab = searchParams.get("tab") || "login"
-  const [tab, setTab] = useState<"login" | "register" | "partner" | "rider">(defaultTab as any)
-  const [form, setForm] = useState({ email: "", password: "", name: "", phone: "" })
+  const [tab, setTab] = useState<"login" | "partner" | "rider">(defaultTab as any)
+
+  // Customer phone OTP state
+  const [phone, setPhone] = useState("")
+  const [name, setName] = useState("")
+  const [otp, setOtp] = useState("")
+  const [otpSent, setOtpSent] = useState(false)
+  const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null)
+  const recaptchaRef = useRef<RecaptchaVerifier | null>(null)
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null)
+
+  // Partner / Rider form state
   const [partnerForm, setPartnerForm] = useState({ email: "", password: "", shopName: "", ownerName: "", phone: "", address: "", landmark: "", lat: 0, lng: 0 })
-  const [detectingLoc, setDetectingLoc] = useState(false)
   const [riderForm, setRiderForm] = useState({ email: "", password: "", name: "", phone: "" })
+  const [detectingLoc, setDetectingLoc] = useState(false)
+
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState("")
@@ -27,20 +48,49 @@ function AuthPage() {
     window.location.href = redirect
   }, [redirect])
 
+  function getRecaptcha() {
+    if (!recaptchaRef.current) {
+      recaptchaRef.current = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", { size: "invisible" })
+    }
+    return recaptchaRef.current
+  }
+
+  const handleSendOtp = async () => {
+    setError(""); setLoading(true)
+    try {
+      const formatted = phone.startsWith("+") ? phone : `+63${phone.replace(/^0/, "")}`
+      const result = await signInWithPhoneNumber(firebaseAuth, formatted, getRecaptcha())
+      setConfirmation(result)
+      setOtpSent(true)
+    } catch (e: any) {
+      recaptchaRef.current = null
+      setError(e.message || "Failed to send OTP")
+    } finally { setLoading(false) }
+  }
+
+  const handleVerifyOtp = async () => {
+    if (!confirmation) return
+    setError(""); setLoading(true)
+    try {
+      await confirmation.confirm(otp)
+      const formatted = phone.startsWith("+") ? phone : `+63${phone.replace(/^0/, "")}`
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "phone-login", phone: formatted, name }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Login failed")
+      setAuth(data.token, data.user)
+      window.location.href = redirect
+    } catch (e: any) { setError(e.message || "Invalid OTP") } finally { setLoading(false) }
+  }
+
   async function callAuth(body: object) {
     const res = await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || "Authentication failed")
     return data
-  }
-
-  const handleCustomerAuth = async () => {
-    setError(""); setLoading(true)
-    try {
-      const data = await callAuth({ action: tab === "login" ? "login" : "register", email: form.email, password: form.password, name: form.name, phone: form.phone, role: "customer" })
-      setAuth(data.token, data.user)
-      window.location.href = redirect
-    } catch (e: any) { setError(e.message) } finally { setLoading(false) }
   }
 
   const handlePartnerRegister = async () => {
@@ -67,19 +117,20 @@ function AuthPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#16A34A] to-[#15803d] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div id="recaptcha-container" ref={recaptchaContainerRef} />
       <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-6">
           <a href="/" className="inline-block">
-            <h1 className="text-white text-2xl font-black tracking-tight">Payroo</h1>
+            <h1 className="text-white text-2xl font-black tracking-tight">Gruwcer</h1>
           </a>
           <p className="text-white/60 text-xs mt-1">Sign in to access all services</p>
         </div>
 
         <div className="flex bg-white/10 rounded-xl p-1 mb-4">
-          {(["login", "register", "partner", "rider"] as const).map((t) => (
-            <button key={t} onClick={() => { setTab(t); setError(""); setSuccess("") }}
+          {(["login", "partner", "rider"] as const).map((t) => (
+            <button key={t} onClick={() => { setTab(t); setError(""); setSuccess(""); setOtpSent(false); setOtp(""); setPhone(""); setName("") }}
               className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition-colors capitalize ${tab === t ? "bg-white text-[#16A34A]" : "text-white/70"}`}>
-              {t === "login" ? "Sign In" : t === "register" ? "Register" : t === "partner" ? "Partner" : "Rider"}
+              {t === "login" ? "Customer" : t === "partner" ? "Partner" : "Rider"}
             </button>
           ))}
         </div>
@@ -93,6 +144,55 @@ function AuthPage() {
               <p className="text-sm font-bold text-gray-800">{success}</p>
               <a href="/auth" className="inline-block mt-4 text-xs text-[#16A34A] font-bold">← Back to Sign In</a>
             </div>
+          ) : tab === "login" ? (
+            <>
+              <h2 className="font-bold text-lg text-gray-800 mb-1">Customer Sign In</h2>
+              <p className="text-xs text-gray-400 mb-4">Enter your phone number to receive an OTP</p>
+              {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg mb-3">{error}</div>}
+              {!otpSent ? (
+                <div className="space-y-3">
+                  <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:border-[#16A34A]">
+                    <span className="px-3 text-sm text-gray-500 bg-gray-50 border-r border-gray-200 py-2.5">🇵🇭 +63</span>
+                    <input
+                      placeholder="9XX XXX XXXX"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
+                      maxLength={10}
+                      className="flex-1 px-3 py-2.5 text-sm outline-none"
+                    />
+                  </div>
+                  <input
+                    placeholder="Your Name (for new accounts)"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#16A34A]"
+                  />
+                  <button onClick={handleSendOtp} disabled={loading || phone.length < 10}
+                    className="w-full bg-[#16A34A] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+                    {loading ? "Sending OTP..." : "Send OTP"}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-gray-500">OTP sent to <span className="font-bold text-gray-700">+63{phone}</span></p>
+                  <input
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
+                    maxLength={6}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#16A34A] tracking-widest text-center text-lg font-bold"
+                  />
+                  <button onClick={handleVerifyOtp} disabled={loading || otp.length < 6}
+                    className="w-full bg-[#16A34A] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+                    {loading ? "Verifying..." : "Verify & Sign In"}
+                  </button>
+                  <button onClick={() => { setOtpSent(false); setOtp(""); setError(""); recaptchaRef.current = null }}
+                    className="w-full text-xs text-gray-400 hover:text-gray-600">
+                    ← Change number
+                  </button>
+                </div>
+              )}
+            </>
           ) : tab === "rider" ? (
             <>
               <h2 className="font-bold text-lg text-gray-800 mb-1">Rider Registration</h2>
@@ -103,12 +203,13 @@ function AuthPage() {
                 <input placeholder="Phone Number" value={riderForm.phone} onChange={(e) => setRiderForm({ ...riderForm, phone: e.target.value.replace(/[^0-9]/g, "") })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
                 <input type="email" placeholder="Email" value={riderForm.email} onChange={(e) => setRiderForm({ ...riderForm, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
                 <input type="password" placeholder="Password" value={riderForm.password} onChange={(e) => setRiderForm({ ...riderForm, password: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
-                <button onClick={handleRiderRegister} disabled={loading || !riderForm.email || !riderForm.password} className="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+                <button onClick={handleRiderRegister} disabled={loading || !riderForm.email || !riderForm.password}
+                  className="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
                   {loading ? "Registering..." : "Register as Rider"}
                 </button>
               </div>
             </>
-          ) : tab === "partner" ? (
+          ) : (
             <>
               <h2 className="font-bold text-lg text-gray-800 mb-1">Partner Registration</h2>
               <p className="text-xs text-gray-400 mb-4">Register your laundromat as a partner</p>
@@ -137,27 +238,9 @@ function AuthPage() {
                 <input placeholder="Landmark" value={partnerForm.landmark} onChange={(e) => setPartnerForm({ ...partnerForm, landmark: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
                 <input type="email" placeholder="Email" value={partnerForm.email} onChange={(e) => setPartnerForm({ ...partnerForm, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
                 <input type="password" placeholder="Password" value={partnerForm.password} onChange={(e) => setPartnerForm({ ...partnerForm, password: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
-                <button onClick={handlePartnerRegister} disabled={loading || !partnerForm.email || !partnerForm.password} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+                <button onClick={handlePartnerRegister} disabled={loading || !partnerForm.email || !partnerForm.password}
+                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
                   {loading ? "Registering..." : "Register as Partner"}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <h2 className="font-bold text-lg text-gray-800 mb-1">{tab === "login" ? "Welcome Back" : "Create Account"}</h2>
-              <p className="text-xs text-gray-400 mb-4">{tab === "login" ? "Sign in to your account" : "Register to start ordering"}</p>
-              {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg mb-3">{error}</div>}
-              <div className="space-y-3">
-                {tab === "register" && (
-                  <>
-                    <input placeholder="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#16A34A]" />
-                    <input placeholder="Phone Number" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/[^0-9]/g, "") })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#16A34A]" />
-                  </>
-                )}
-                <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#16A34A]" />
-                <input type="password" placeholder="Password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} onKeyDown={(e) => e.key === "Enter" && handleCustomerAuth()} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#16A34A]" />
-                <button onClick={handleCustomerAuth} disabled={loading || !form.email || !form.password} className="w-full bg-[#16A34A] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
-                  {loading ? "Please wait..." : tab === "login" ? "Sign In" : "Create Account"}
                 </button>
               </div>
             </>
