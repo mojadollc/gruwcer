@@ -971,9 +971,8 @@ export async function getNotifications(recipientType: string, recipientId?: stri
     q = query(collection(db, "notifications"), where("recipientType", "==", recipientType), orderBy("createdAt", "desc"))
   }
   const snap = await getDocs(q)
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AppNotification)
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }) as AppNotification)
 }
-
 export function onNotifications(recipientType: string, recipientId: string | undefined, callback: (notifications: AppNotification[]) => void) {
   let q
   if (recipientId) {
@@ -1396,3 +1395,5 @@ export async function updateServiceJobStatus(jobId: string, status: string, prov
 }
 
 export { db, auth }
+
+

@@ -347,7 +347,7 @@ export async function toggleProductVisibility(productId: string, show: boolean) 
 
 export async function getCategories(): Promise<string[]> {
   const rows = await prisma.product.findMany({ where: { showOnSite: true }, select: { category: true } })
-  const cats = new Set(rows.map((r) => r.category).filter(Boolean) as string[])
+  const cats = new Set(rows.map((r: any) => r.category).filter(Boolean) as string[])
   return Array.from(cats).sort()
 }
 
