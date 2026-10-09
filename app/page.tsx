@@ -401,7 +401,7 @@ export default function HomePage() {
         <div className="mt-8 md:mt-12">
           <h2 className="font-bold text-sm md:text-lg text-gray-800 mb-3 md:mb-5">How it works</h2>
           <div className="grid grid-cols-3 gap-3 md:gap-6">
-            [
+            {[
               { step: "1", title: "Choose", desc: "Pick a service", icon: "https://img.icons8.com/3d-fluency/94/finger.png" },
               { step: "2", title: "Order", desc: "Add items & pay", icon: "https://img.icons8.com/3d-fluency/94/shopping-cart.png" },
               { step: "3", title: "Enjoy", desc: "Delivered fast", icon: "https://img.icons8.com/3d-fluency/94/rocket.png" },
