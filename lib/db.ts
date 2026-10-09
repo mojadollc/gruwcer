@@ -1,7 +1,7 @@
 import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import type { UserStatus, OrderStatus as PrismaOrderStatus } from "@prisma/client"
+
 
 const JWT_SECRET = process.env.JWT_SECRET || "88seven_jwt_secret"
 
@@ -511,7 +511,7 @@ export async function createOrder(order: Omit<Order, "id" | "createdAt" | "updat
   const created = await prisma.order.create({
     data: {
       ...rest,
-      status: rest.status as PrismaOrderStatus,
+      status: rest.status as any,
       items: { create: items.map((i) => ({ ...i, productId: i.productId || null })) },
     },
   })
@@ -628,7 +628,7 @@ export async function createDriver(data: Omit<Driver, "id">) {
       name: data.name,
       email: data.email,
       phone: data.phone,
-      status: (data.status || "pending") as UserStatus,
+      status: (data.status || "pending") as any,
       isOnline: data.isOnline || false,
       lat: data.lat,
       lng: data.lng,
@@ -807,7 +807,7 @@ export async function getAllPartners(): Promise<LaundryPartner[]> {
 }
 
 export async function updatePartnerStatus(id: string, status: "pending" | "active" | "inactive") {
-  await prisma.user.update({ where: { id }, data: { status: status as UserStatus } })
+  await prisma.user.update({ where: { id }, data: { status: status as any } })
 }
 
 export async function getPartnerWalletBalance(partnerId: string): Promise<number> {
