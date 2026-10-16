@@ -1,18 +1,18 @@
 module.exports = {
   apps: [{
-    name: "88-seven",
+    name: "gruwcer",
     script: "node_modules/.bin/next",
     args: "start",
-    cwd: "/var/www/88-seven",
-    instances: 2,
-    exec_mode: "cluster",
+    cwd: "/var/www/gruwcer",
+    instances: 1,
+    exec_mode: "fork",
     env: {
       NODE_ENV: "production",
-      PORT: 3051,
+      PORT: 3004,
     },
     max_memory_restart: "512M",
-    error_file: "/var/log/pm2/88-seven-error.log",
-    out_file: "/var/log/pm2/88-seven-out.log",
+    error_file: "/var/log/pm2/gruwcer-error.log",
+    out_file: "/var/log/pm2/gruwcer-out.log",
     merge_logs: true,
     log_date_format: "YYYY-MM-DD HH:mm:ss",
   }]
