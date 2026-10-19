@@ -239,11 +239,13 @@ export default function Home() {
     ? storeCategories.map((c) => ({ label: c.name, icon: c.imageUrl || "https://img.icons8.com/3d-fluency/94/opened-folder.png" }))
     : fallbackCategoryList
 
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const isSameDay = new Date().getHours() < 15
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <main className="min-h-screen bg-[#F4F5F7] pb-24">
+    <main className="min-h-screen bg-[#F4F5F7] pb-24" suppressHydrationWarning>
 
       {/* ── STICKY HEADER ── */}
       <div className="sticky top-0 z-50 shadow-lg">
@@ -255,7 +257,7 @@ export default function Home() {
               <span className="max-w-[220px] truncate text-white/80">{detectingLocation ? "Detecting..." : userAddress || "Set your location"}</span>
             </button>
             <div className="flex items-center gap-3 text-white/70">
-              {user ? (
+              {mounted && user ? (
                 <>
                   <a href="/account" className="hover:text-yellow-300 transition-colors">{profile?.name || "My Account"}</a>
                   <span className="text-white/30">|</span>

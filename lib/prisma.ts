@@ -7,7 +7,12 @@ const { PrismaClient } = require("@prisma/client")
 const globalForPrisma = globalThis as unknown as { prisma: any }
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL!,
+    max: 5,
+    connectionTimeoutMillis: 3000,
+    idleTimeoutMillis: 10000,
+  })
   return new PrismaClient({ adapter, log: ["error"] })
 }
 
