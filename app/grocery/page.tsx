@@ -126,7 +126,7 @@ export default function Home() {
   }, [user])
 
   useEffect(() => {
-    fetch("/api/delivery-settings").then(r => r.ok ? r.json() : null).then(d => { if (d && !d.error && typeof d === 'object') setDeliverySettings(d) }).catch(() => {})
+    fetch("/api/delivery-settings").then(async r => { try { const d = await r.json(); if (d && !d.error && typeof d === 'object') setDeliverySettings(d) } catch {} }).catch(() => {})
     fetch("/api/settings/payment-methods").then(r => r.ok ? r.json() : {}).then(pm => setPaymentMethods((prev: any) => ({ ...prev, ...pm }))).catch(() => {})
   }, [])
 
