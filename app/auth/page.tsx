@@ -11,8 +11,9 @@ const firebaseConfig = {
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
 }
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
-const firebaseAuth = getAuth(app)
+const firebaseReady = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+const app = firebaseReady ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()) : null
+const firebaseAuth = firebaseReady && app ? getAuth(app) : null
 
 function AuthPage() {
   const searchParams = useSearchParams()
@@ -49,6 +50,7 @@ function AuthPage() {
   }, [redirect])
 
   function getRecaptcha() {
+    if (!firebaseAuth) throw new Error("Firebase not configured")
     if (!recaptchaRef.current) {
       recaptchaRef.current = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", { size: "invisible" })
     }
@@ -56,6 +58,7 @@ function AuthPage() {
   }
 
   const handleSendOtp = async () => {
+    if (!firebaseAuth) { setError("Phone login not available — Firebase not configured"); return }
     setError(""); setLoading(true)
     try {
       const formatted = phone.startsWith("+") ? phone : `+63${phone.replace(/^0/, "")}`
