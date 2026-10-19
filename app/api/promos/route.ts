@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+const ERR = { status: 503 }
+
 export async function GET() {
-  const promos = await prisma.platformPromo.findMany({ orderBy: { createdAt: "desc" } })
-  return NextResponse.json(promos)
+  try { return NextResponse.json(await prisma.platformPromo.findMany({ orderBy: { createdAt: "desc" } })) }
+  catch { return NextResponse.json([], ERR) }
 }
 
 export async function POST(req: Request) {
-  const data = await req.json()
-  const promo = await prisma.platformPromo.create({ data })
-  return NextResponse.json(promo)
+  try { return NextResponse.json(await prisma.platformPromo.create({ data: await req.json() })) }
+  catch { return NextResponse.json({ error: "DB unavailable" }, ERR) }
 }
