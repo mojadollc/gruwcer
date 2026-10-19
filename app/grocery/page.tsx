@@ -104,7 +104,8 @@ export default function Home() {
 
   // Load popup banners on every page load - pick random one if multiple
   useEffect(() => {
-    fetch("/api/popup").then(r => r.json()).then((banners: any[]) => {
+    fetch("/api/popup").then(r => r.ok ? r.json() : []).then((banners: any[]) => {
+      if (!Array.isArray(banners)) return
       const enabled = banners.filter(b => b.enabled && b.imageUrl)
       if (enabled.length > 0) {
         setPopupBanners([enabled[Math.floor(Math.random() * enabled.length)]])
@@ -125,8 +126,8 @@ export default function Home() {
   }, [user])
 
   useEffect(() => {
-    fetch("/api/delivery-settings").then(r => r.json()).then(setDeliverySettings)
-    fetch("/api/settings/payment-methods").then(r => r.ok ? r.json() : {}).then(pm => setPaymentMethods((prev: any) => ({ ...prev, ...pm })))
+    fetch("/api/delivery-settings").then(r => r.ok ? r.json() : null).then(d => { if (d && !d.error) setDeliverySettings(d) }).catch(() => {})
+    fetch("/api/settings/payment-methods").then(r => r.ok ? r.json() : {}).then(pm => setPaymentMethods((prev: any) => ({ ...prev, ...pm }))).catch(() => {})
   }, [])
 
 
@@ -319,7 +320,8 @@ export default function Home() {
     async function load() {
       try {
         const res = await fetch("/api/pos-products")
-        const prods: any[] = await res.json()
+        const data = await res.json()
+        const prods: any[] = Array.isArray(data) ? data : []
         for (let i = prods.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [prods[i], prods[j]] = [prods[j], prods[i]] }
         setProducts(prods)
         const cats = [...new Set(prods.map((p: any) => p.category).filter(Boolean))]
