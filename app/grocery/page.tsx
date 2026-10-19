@@ -320,7 +320,8 @@ export default function Home() {
     async function load() {
       try {
         const res = await fetch("/api/pos-products")
-        const data = await res.json()
+        let data: any = []
+        try { data = await res.json() } catch {}
         const prods: any[] = Array.isArray(data) ? data : []
         for (let i = prods.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [prods[i], prods[j]] = [prods[j], prods[i]] }
         setProducts(prods)
@@ -336,11 +337,11 @@ export default function Home() {
     load()
   }, [])
 
-  const filtered = products.filter((p) => {
+  const filtered = Array.isArray(products) ? products.filter((p) => {
     const matchCat = selectedCategory === "All" || p.category === selectedCategory
     const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase())
     return matchCat && matchSearch && p.stock > 0
-  })
+  }) : []
 
   const fallbackCategoryList = [
     { label: "Beverages", icon: "https://img.icons8.com/3d-fluency/94/juice.png" },
