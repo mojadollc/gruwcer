@@ -3,17 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { setAuth, getUser } from "@/lib/auth"
-import { initializeApp, getApps, getApp } from "firebase/app"
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth"
-
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-}
-const firebaseReady = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY
-const app = firebaseReady ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()) : null
-const firebaseAuth = firebaseReady && app ? getAuth(app) : null
+import type { ConfirmationResult } from "firebase/auth"
 
 function AuthPage() {
   const searchParams = useSearchParams()
@@ -27,8 +17,20 @@ function AuthPage() {
   const [otp, setOtp] = useState("")
   const [otpSent, setOtpSent] = useState(false)
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null)
-  const recaptchaRef = useRef<RecaptchaVerifier | null>(null)
+  const recaptchaRef = useRef<any>(null)
   const recaptchaContainerRef = useRef<HTMLDivElement>(null)
+  const firebaseAuthRef = useRef<any>(null)
+
+  const getFirebaseAuth = async () => {
+    if (firebaseAuthRef.current) return firebaseAuthRef.current
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+    if (!apiKey) return null
+    const { initializeApp, getApps, getApp } = await import("firebase/app")
+    const { getAuth } = await import("firebase/auth")
+    const app = getApps().length === 0 ? initializeApp({ apiKey, authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID }) : getApp()
+    firebaseAuthRef.current = getAuth(app)
+    return firebaseAuthRef.current
+  }
 
   // Partner / Rider form state
   const [partnerForm, setPartnerForm] = useState({ email: "", password: "", shopName: "", ownerName: "", phone: "", address: "", landmark: "", lat: 0, lng: 0 })
@@ -49,20 +51,17 @@ function AuthPage() {
     window.location.href = redirect
   }, [redirect])
 
-  function getRecaptcha() {
-    if (!firebaseAuth) throw new Error("Firebase not configured")
-    if (!recaptchaRef.current) {
-      recaptchaRef.current = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", { size: "invisible" })
-    }
-    return recaptchaRef.current
-  }
-
   const handleSendOtp = async () => {
-    if (!firebaseAuth) { setError("Phone login not available — Firebase not configured"); return }
     setError(""); setLoading(true)
     try {
+      const auth = await getFirebaseAuth()
+      if (!auth) { setError("Phone login not available — Firebase not configured"); setLoading(false); return }
+      const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth")
+      if (!recaptchaRef.current) {
+        recaptchaRef.current = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" })
+      }
       const formatted = phone.startsWith("+") ? phone : `+63${phone.replace(/^0/, "")}`
-      const result = await signInWithPhoneNumber(firebaseAuth, formatted, getRecaptcha())
+      const result = await signInWithPhoneNumber(auth, formatted, recaptchaRef.current)
       setConfirmation(result)
       setOtpSent(true)
     } catch (e: any) {
