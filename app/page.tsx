@@ -202,90 +202,119 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#F4F5F7]" suppressHydrationWarning>
 
       {/* ═══ HEADER ═══ */}
-      <header className="bg-[#16A34A] sticky top-0 z-50 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
+      <header className="sticky top-0 z-50">
 
-          {/* ── Main row ── */}
-          <div className="flex items-center justify-between py-3 gap-3">
+        {/* ── Top bar: logo + actions ── */}
+        <div className="bg-[#16A34A]">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
 
-            {/* Left: location */}
-            <button onClick={() => setShowAddressModal(true)} className="flex items-center gap-1.5 min-w-0 max-w-[160px] md:max-w-[240px]">
-              <svg className={`w-4 h-4 text-white/80 shrink-0 ${detecting ? "animate-pulse" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              <div className="text-left min-w-0">
-                <p className="text-white/60 text-[9px] leading-none font-bold uppercase tracking-wide">Deliver to</p>
-                <p className="text-white text-xs font-semibold truncate leading-tight mt-0.5">{detecting ? "Detecting..." : address || "Set location"}</p>
+            {/* Logo */}
+            <a href="/" className="flex items-center gap-2.5 shrink-0">
+              {/* Icon mark */}
+              <div className="relative w-9 h-9 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                  <path d="M12 2C8 2 4 5.5 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.5-4-8-8-8z" fill="#16A34A"/>
+                  <circle cx="12" cy="10" r="2.5" fill="white"/>
+                </svg>
               </div>
-              <svg className="w-3 h-3 text-white/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
-            </button>
-
-            {/* Center: logo */}
-            <a href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
-                <span className="text-white font-black text-base leading-none">G</span>
+              {/* Wordmark */}
+              <div className="leading-none">
+                <span className="text-white font-black text-xl tracking-tight">Gruwcer</span>
+                <span className="block text-white/50 text-[9px] font-medium tracking-widest uppercase">Super App</span>
               </div>
-              <span className="text-white font-black text-lg tracking-tight">Gruwcer</span>
             </a>
 
-            {/* Right: notifications + account */}
+            {/* Location pill — desktop */}
+            <button onClick={() => setShowAddressModal(true)} className="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-4 py-2 transition-colors min-w-0 max-w-xs">
+              <svg className={`w-3.5 h-3.5 text-[#FFD23F] shrink-0 ${detecting ? "animate-pulse" : ""}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <div className="text-left min-w-0">
+                <p className="text-white/50 text-[9px] font-bold uppercase tracking-widest leading-none">Deliver to</p>
+                <p className="text-white text-xs font-semibold truncate mt-0.5">{detecting ? "Detecting..." : address || "Set your location"}</p>
+              </div>
+              <svg className="w-3 h-3 text-white/40 shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/></svg>
+            </button>
+
+            {/* Right actions */}
             <div className="flex items-center gap-1 shrink-0">
+
+              {/* Location icon — mobile only */}
+              <button onClick={() => setShowAddressModal(true)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
+                <svg className={`w-5 h-5 text-white ${detecting ? "animate-pulse" : ""}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              </button>
+
               {/* Notifications */}
               <div className="relative">
-                <button onClick={() => setShowNotifs(!showNotifs)} className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                  {mounted && unread > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF8A00] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{unread}</span>}
+                <button onClick={() => setShowNotifs(!showNotifs)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors relative">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                  {mounted && unread > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-[#FF8A00] text-white text-[8px] font-black rounded-full flex items-center justify-center">{unread}</span>
+                  )}
                 </button>
                 {showNotifs && (
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
-                    <div className="px-4 py-2.5 border-b flex items-center justify-between bg-gray-50">
-                      <span className="text-xs font-bold text-gray-700">Notifications</span>
-                      {mounted && unread > 0 && user && <button onClick={markAllRead} className="text-[10px] text-[#16A34A] font-bold">Mark all read</button>}
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b flex items-center justify-between">
+                      <span className="text-sm font-bold text-gray-800">Notifications</span>
+                      {mounted && unread > 0 && user && <button onClick={markAllRead} className="text-xs text-[#16A34A] font-bold">Mark all read</button>}
                     </div>
-                    <div className="max-h-64 overflow-y-auto">
-                      {notifications.length === 0 ? <p className="p-4 text-xs text-gray-400 text-center">No notifications</p> : (
-                        notifications.slice(0, 8).map((n) => (
-                          <div key={n.id} className={`px-4 py-3 border-b border-gray-50 ${!n.read ? "bg-green-50" : ""}`}>
+                    <div className="max-h-64 overflow-y-auto divide-y divide-gray-50">
+                      {notifications.length === 0
+                        ? <p className="p-5 text-xs text-gray-400 text-center">No notifications yet</p>
+                        : notifications.slice(0, 8).map((n) => (
+                          <div key={n.id} className={`px-4 py-3 ${!n.read ? "bg-green-50" : ""}`}>
                             <p className="text-xs font-bold text-gray-800">{n.title}</p>
                             <p className="text-[11px] text-gray-500 mt-0.5">{n.message}</p>
                           </div>
-                        ))
-                      )}
+                        ))}
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Account */}
-              <a href="/account" className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
+              <a href={mounted && user ? "/account" : "/auth"} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
                 {mounted && profile?.name ? (
-                  <div className="w-7 h-7 rounded-full bg-[#FF8A00] flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-full bg-[#FF8A00] flex items-center justify-center shadow">
                     <span className="text-white text-xs font-black">{profile.name.charAt(0).toUpperCase()}</span>
                   </div>
                 ) : (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 )}
               </a>
             </div>
           </div>
+        </div>
 
-          {/* ── Category nav strip ── */}
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-2.5 -mx-1 px-1">
-            {SERVICES.map((s) => (
-              <a
-                key={s.id}
-                href={s.available ? s.href : undefined}
-                className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 ${
-                  s.available
-                    ? "text-white bg-white/10 hover:bg-white/25"
-                    : "text-white/35 cursor-default"
-                }`}
-              >
-                <span className="w-3.5 h-3.5 shrink-0"><ServiceIcon id={s.id} /></span>
-                {s.name}
-                {!s.available && <span className="bg-[#FF8A00]/80 text-white text-[7px] font-bold px-1 py-px rounded-sm">SOON</span>}
-              </a>
-            ))}
+        {/* ── Location bar — mobile only ── */}
+        <button onClick={() => setShowAddressModal(true)} className="md:hidden w-full bg-[#0d7a3a] flex items-center gap-2 px-4 py-2 border-t border-white/10">
+          <svg className={`w-3.5 h-3.5 text-[#FFD23F] shrink-0 ${detecting ? "animate-pulse" : ""}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <span className="text-white/60 text-[10px] font-bold uppercase tracking-widest shrink-0">Deliver to</span>
+          <span className="text-white text-xs font-semibold truncate flex-1 text-left">{detecting ? "Detecting location..." : address || "Set your location"}</span>
+          <svg className="w-3 h-3 text-white/40 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/></svg>
+        </button>
+
+        {/* ── Category nav strip ── */}
+        <div className="bg-[#16A34A] border-t border-white/10">
+          <div className="max-w-7xl mx-auto px-3 md:px-6">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-2">
+              {SERVICES.map((s) => (
+                <a
+                  key={s.id}
+                  href={s.available ? s.href : undefined}
+                  className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all shrink-0 ${
+                    s.available
+                      ? "text-white hover:bg-white/20 active:bg-white/30"
+                      : "text-white/30 cursor-default"
+                  }`}
+                >
+                  <span className="w-3.5 h-3.5 shrink-0"><ServiceIcon id={s.id} /></span>
+                  {s.name}
+                  {!s.available && <span className="bg-[#FF8A00] text-white text-[7px] font-black px-1 py-px rounded-sm leading-none">SOON</span>}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
+
       </header>
 
       {/* ═══ MAIN CONTENT ═══ */}
