@@ -3,22 +3,42 @@
 import { useEffect, useState } from "react"
 import { getUser, getToken } from "@/lib/auth"
 
+const ServiceIcon = ({ id }: { id: string }) => {
+  const icons: Record<string, JSX.Element> = {
+    grocery: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>,
+    laundry: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="12" cy="13" r="4"/><circle cx="12" cy="13" r="2"/><line x1="6" y1="7" x2="6" y2="7" strokeWidth={2.5}/><line x1="9" y1="7" x2="9" y2="7" strokeWidth={2.5}/></svg>,
+    services: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>,
+    travel: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>,
+    healthcare: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
+    food: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+    errand: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+    bills: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+    more: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>,
+  }
+  return icons[id] || icons.more
+}
+
 const SERVICES = [
-  { id: "grocery", name: "Grocery", icon: "https://img.icons8.com/3d-fluency/94/shopping-cart.png", href: "/grocery", available: true },
-  { id: "laundry", name: "Laundry", icon: "https://img.icons8.com/3d-fluency/94/washing-machine.png", href: "/laundry", available: true },
-  { id: "services", name: "Services", icon: "https://img.icons8.com/3d-fluency/94/maintenance.png", href: "/home-services", available: true },
-  { id: "travel", name: "Hotel & Flights", icon: "https://img.icons8.com/3d-fluency/94/airplane-mode-on.png", href: "/travel", available: true },
-  { id: "healthcare", name: "Clinics", icon: "https://img.icons8.com/3d-fluency/94/hospital.png", href: "#", available: false },
-  { id: "food", name: "Food To Go", icon: "https://img.icons8.com/3d-fluency/94/hamburger.png", href: "#", available: false },
-  { id: "errand", name: "Errands", icon: "https://img.icons8.com/3d-fluency/94/box.png", href: "#", available: false },
-  { id: "bills", name: "Bills", icon: "https://img.icons8.com/3d-fluency/94/bill.png", href: "#", available: false },
-  { id: "more", name: "More", icon: "https://img.icons8.com/3d-fluency/94/menu.png", href: "#", available: false },
+  { id: "grocery", name: "Grocery", href: "/grocery", available: true, color: "text-green-600 bg-green-50" },
+  { id: "laundry", name: "Laundry", href: "/laundry", available: true, color: "text-blue-600 bg-blue-50" },
+  { id: "services", name: "Services", href: "/home-services", available: true, color: "text-orange-600 bg-orange-50" },
+  { id: "travel", name: "Hotel & Flights", href: "/travel", available: true, color: "text-purple-600 bg-purple-50" },
+  { id: "healthcare", name: "Clinics", href: "#", available: false, color: "text-red-500 bg-red-50" },
+  { id: "food", name: "Food To Go", href: "#", available: false, color: "text-yellow-600 bg-yellow-50" },
+  { id: "errand", name: "Errands", href: "#", available: false, color: "text-teal-600 bg-teal-50" },
+  { id: "bills", name: "Bills", href: "#", available: false, color: "text-indigo-600 bg-indigo-50" },
+  { id: "more", name: "More", href: "#", available: false, color: "text-gray-600 bg-gray-100" },
 ]
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
-  const [banners, setBanners] = useState<{ id: string; title: string; subtitle: string; imageUrl: string; bgColor: string; link: string }[]>([])
+  const FALLBACK_BANNERS = [
+    { id: "1", title: "Free Delivery", subtitle: "On orders ₱1,000+", imageUrl: "", bgColor: "#16A34A", link: "/grocery" },
+    { id: "2", title: "Laundry Pickup", subtitle: "We'll handle the rest", imageUrl: "", bgColor: "#1a56db", link: "/laundry" },
+    { id: "3", title: "Home Services", subtitle: "Aircon, plumbing & more", imageUrl: "", bgColor: "#0d9488", link: "/home-services" },
+  ]
+  const [banners, setBanners] = useState<{ id: string; title: string; subtitle: string; imageUrl: string; bgColor: string; link: string }[]>(FALLBACK_BANNERS)
   const [currentBanner, setCurrentBanner] = useState(0)
   const [partners, setPartners] = useState<any[]>([])
   const [promos, setPromos] = useState<any[]>([])
@@ -114,12 +134,8 @@ export default function HomePage() {
   }, [user])
 
   useEffect(() => {
-    fetch("/api/hero").then(r => r.ok ? r.json() : []).then((data: any[]) => {
-      setBanners(data.length > 0 ? data.map((s: any) => ({ id: s.id, title: s.title || "", subtitle: s.description || s.subtitle || "", imageUrl: s.imageUrl || "", bgColor: s.bgColor || "#16A34A", link: s.link || "/grocery" })) : [
-        { id: "1", title: "Free Delivery", subtitle: "On orders ₱1,000+", imageUrl: "", bgColor: "#16A34A", link: "/grocery" },
-        { id: "2", title: "Laundry Pickup", subtitle: "We'll handle the rest", imageUrl: "", bgColor: "#1a56db", link: "/laundry" },
-        { id: "3", title: "Home Services", subtitle: "Aircon, plumbing & more", imageUrl: "", bgColor: "#0d9488", link: "/services" },
-      ])
+    fetch("/api/hero", { next: { revalidate: 300 } } as any).then(r => r.ok ? r.json() : []).then((data: any[]) => {
+      if (data.length > 0) setBanners(data.map((s: any) => ({ id: s.id, title: s.title || "", subtitle: s.description || s.subtitle || "", imageUrl: s.imageUrl || "", bgColor: s.bgColor || "#16A34A", link: s.link || "/grocery" })))
     }).catch(() => {})
     fetch("/api/promos").then(r => r.ok ? r.json() : []).then(setPromos).catch(() => {})
     fetch("/api/users?role=partner").then(r => r.ok ? r.json() : []).then((p: any[]) => setPartners(p.filter(x => x.status === "active"))).catch(() => {})
@@ -187,58 +203,36 @@ export default function HomePage() {
 
       {/* ═══ HEADER ═══ */}
       <header className="bg-[#16A34A] sticky top-0 z-50 shadow-md">
-        {/* Top utility bar - desktop only */}
-        <div className="hidden md:block bg-[#0B5E34] text-white/70 text-xs">
-          <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-8">
-            <span>📍 {detecting ? "Detecting..." : address || "Set your location"}</span>
-            <div className="flex items-center gap-4">
-              <a href="/auth" className="hover:text-white transition-colors">Sign In</a>
-              <span className="text-white/30">|</span>
-              <a href="/account" className="hover:text-white transition-colors">My Account</a>
-              <span className="text-white/30">|</span>
-              <a href="/partner" className="hover:text-white transition-colors">Become a Partner</a>
-            </div>
-          </div>
-        </div>
-
-        {/* Main header row */}
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex items-center gap-3 md:gap-6 py-3">
-            {/* Logo */}
-            <a href="/" className="text-white font-black text-xl md:text-2xl tracking-tight shrink-0">Gruwcer</a>
 
-            {/* Location button - desktop */}
-            <button onClick={() => setShowAddressModal(true)} className="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2 text-white text-sm transition-colors shrink-0 max-w-[200px]">
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          {/* ── Main row ── */}
+          <div className="flex items-center justify-between py-3 gap-3">
+
+            {/* Left: location */}
+            <button onClick={() => setShowAddressModal(true)} className="flex items-center gap-1.5 min-w-0 max-w-[160px] md:max-w-[240px]">
+              <svg className={`w-4 h-4 text-white/80 shrink-0 ${detecting ? "animate-pulse" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               <div className="text-left min-w-0">
-                <p className="text-white/60 text-[9px] leading-none uppercase font-bold">Deliver to</p>
-                <p className="text-white text-xs font-semibold truncate">{detecting ? "Detecting..." : address || "Set location"}</p>
+                <p className="text-white/60 text-[9px] leading-none font-bold uppercase tracking-wide">Deliver to</p>
+                <p className="text-white text-xs font-semibold truncate leading-tight mt-0.5">{detecting ? "Detecting..." : address || "Set location"}</p>
               </div>
-              <svg className="w-3 h-3 text-white/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className="w-3 h-3 text-white/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
             </button>
 
-            {/* Search bar */}
-            <div className="flex-1">
-              <a href="/grocery" className="flex items-center gap-2 bg-white rounded-lg px-4 py-2.5 w-full group">
-                <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                <span className="text-sm text-gray-400 flex-1">Search groceries, services, laundry...</span>
-                <span className="hidden md:flex items-center gap-1 bg-[#FF8A00] text-white text-xs font-bold px-3 py-1 rounded-md shrink-0">Search</span>
-              </a>
-            </div>
+            {/* Center: logo */}
+            <a href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+              <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+                <span className="text-white font-black text-base leading-none">G</span>
+              </div>
+              <span className="text-white font-black text-lg tracking-tight">Gruwcer</span>
+            </a>
 
-            {/* Right icons */}
-            <div className="flex items-center gap-2 md:gap-3 shrink-0">
-              {/* Mobile location */}
-              <button onClick={() => setShowAddressModal(true)} className="md:hidden flex flex-col items-center text-white">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              </button>
-
+            {/* Right: notifications + account */}
+            <div className="flex items-center gap-1 shrink-0">
               {/* Notifications */}
               <div className="relative">
-                <button onClick={() => setShowNotifs(!showNotifs)} className="flex flex-col items-center text-white relative">
-                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                  {mounted && unread > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FF8A00] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{unread}</span>}
-                  <span className="hidden md:block text-[10px] text-white/70 mt-0.5">Alerts</span>
+                <button onClick={() => setShowNotifs(!showNotifs)} className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                  {mounted && unread > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-[#FF8A00] text-white text-[9px] font-bold rounded-full flex items-center justify-center">{unread}</span>}
                 </button>
                 {showNotifs && (
                   <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
@@ -261,24 +255,33 @@ export default function HomePage() {
               </div>
 
               {/* Account */}
-              <a href="/account" className="flex flex-col items-center text-white">
-                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                <span className="hidden md:block text-[10px] text-white/70 mt-0.5">{mounted && profile?.name ? profile.name.split(" ")[0] : "Account"}</span>
+              <a href="/account" className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors">
+                {mounted && profile?.name ? (
+                  <div className="w-7 h-7 rounded-full bg-[#FF8A00] flex items-center justify-center">
+                    <span className="text-white text-xs font-black">{profile.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                ) : (
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                )}
               </a>
             </div>
           </div>
 
-          {/* Category nav strip */}
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
+          {/* ── Category nav strip ── */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-2.5 -mx-1 px-1">
             {SERVICES.map((s) => (
               <a
                 key={s.id}
                 href={s.available ? s.href : undefined}
-                className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-colors shrink-0 ${s.available ? "text-white hover:bg-white/20" : "text-white/40 cursor-default"}`}
+                className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 ${
+                  s.available
+                    ? "text-white bg-white/10 hover:bg-white/25"
+                    : "text-white/35 cursor-default"
+                }`}
               >
-                <img src={s.icon} alt={s.name} className="w-4 h-4 object-contain" />
+                <span className="w-3.5 h-3.5 shrink-0"><ServiceIcon id={s.id} /></span>
                 {s.name}
-                {!s.available && <span className="bg-[#FF8A00] text-white text-[8px] font-bold px-1 py-px rounded-sm">SOON</span>}
+                {!s.available && <span className="bg-[#FF8A00]/80 text-white text-[7px] font-bold px-1 py-px rounded-sm">SOON</span>}
               </a>
             ))}
           </div>
@@ -289,10 +292,14 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 pb-24 md:pb-12">
 
         {/* ═══ HERO BANNER ═══ */}
-        {mounted && banners.length > 0 && (
-          <div className="mt-4 md:mt-6">
-            <div className="md:flex md:gap-4">
-              {/* Main banner */}
+        <div className="mt-4 md:mt-6">
+          <div className="md:flex md:gap-4">
+            {/* Main banner */}
+            {banners.length === 0 ? (
+              <div className="relative rounded-2xl overflow-hidden h-[160px] md:h-[340px] md:flex-1 bg-gray-200 animate-pulse">
+                <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+              </div>
+            ) : (
               <div
                 className="relative rounded-2xl overflow-hidden h-[160px] md:h-[340px] md:flex-1 cursor-pointer"
                 style={{
@@ -317,29 +324,29 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
+            )}
 
-              {/* Side banners - desktop only */}
-              <div className="hidden md:flex flex-col gap-4 w-64">
-                <a href="/grocery" className="flex-1 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-5 text-white relative overflow-hidden hover:shadow-lg transition-shadow flex flex-col justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase opacity-70">Same-day delivery</p>
-                    <p className="text-lg font-black mt-1">Grocery</p>
-                    <p className="text-xs opacity-80 mt-0.5">Fresh produce & essentials</p>
-                  </div>
-                  <span className="self-start bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full mt-3">Order now</span>
-                </a>
-                <a href="/laundry" className="flex-1 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-5 text-white relative overflow-hidden hover:shadow-lg transition-shadow flex flex-col justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase opacity-70">Pickup & delivery</p>
-                    <p className="text-lg font-black mt-1">Laundry</p>
-                    <p className="text-xs opacity-80 mt-0.5">Wash, dry & fold</p>
-                  </div>
-                  <span className="self-start bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full mt-3">Book now</span>
-                </a>
-              </div>
+            {/* Side banners - desktop only */}
+            <div className="hidden md:flex flex-col gap-4 w-64">
+              <a href="/grocery" className="flex-1 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-5 text-white relative overflow-hidden hover:shadow-lg transition-shadow flex flex-col justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase opacity-70">Same-day delivery</p>
+                  <p className="text-lg font-black mt-1">Grocery</p>
+                  <p className="text-xs opacity-80 mt-0.5">Fresh produce & essentials</p>
+                </div>
+                <span className="self-start bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full mt-3">Order now</span>
+              </a>
+              <a href="/laundry" className="flex-1 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-5 text-white relative overflow-hidden hover:shadow-lg transition-shadow flex flex-col justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase opacity-70">Pickup & delivery</p>
+                  <p className="text-lg font-black mt-1">Laundry</p>
+                  <p className="text-xs opacity-80 mt-0.5">Wash, dry & fold</p>
+                </div>
+                <span className="self-start bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full mt-3">Book now</span>
+              </a>
             </div>
           </div>
-        )}
+        </div>
 
         {/* ═══ SERVICES GRID ═══ */}
         <div className="mt-5 md:mt-8 bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100">
@@ -352,8 +359,8 @@ export default function HomePage() {
                 className={`relative flex flex-col items-center gap-1.5 group ${!s.available ? "opacity-50" : ""}`}
               >
                 {!s.available && <span className="absolute -top-1 left-1/2 -translate-x-1/2 z-10 bg-[#FF8A00] text-white text-[7px] font-bold px-1 py-px rounded-sm whitespace-nowrap">SOON</span>}
-                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center bg-[#F4F5F7] ${s.available ? "group-hover:bg-green-50 transition-colors" : ""}`}>
-                  <img src={s.icon} alt={s.name} className="w-8 h-8 md:w-9 md:h-9 object-contain" />
+                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center ${s.available ? s.color + " group-hover:scale-110 transition-transform" : "bg-gray-100 text-gray-400"}`}>
+                  <span className="w-6 h-6 md:w-7 md:h-7"><ServiceIcon id={s.id} /></span>
                 </div>
                 <span className="text-[10px] md:text-xs text-gray-600 font-medium text-center leading-tight">{s.name}</span>
               </a>
@@ -362,7 +369,7 @@ export default function HomePage() {
         </div>
 
         {/* ═══ PROMOS / DEALS ═══ */}
-        {mounted && promos.length > 0 && (
+        {promos.length > 0 && (
           <div className="mt-5 md:mt-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-bold text-sm md:text-base text-gray-800">🔥 Deals for You</h2>
@@ -411,7 +418,7 @@ export default function HomePage() {
         </div>
 
         {/* PARTNERS */}
-        {mounted && partners.length > 0 && (
+        {partners.length > 0 && (
           <div className="mt-5 md:mt-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-bold text-sm md:text-base text-gray-800">🧺 Laundry Partners</h2>
@@ -435,13 +442,13 @@ export default function HomePage() {
           <h2 className="font-bold text-sm md:text-base text-gray-800 mb-4">How It Works</h2>
           <div className="grid grid-cols-3 gap-3 md:gap-6">
             {[
-              { step: "1", title: "Choose", desc: "Pick a service", icon: "https://img.icons8.com/3d-fluency/94/finger.png" },
-              { step: "2", title: "Order", desc: "Add items & pay", icon: "https://img.icons8.com/3d-fluency/94/shopping-cart.png" },
-              { step: "3", title: "Enjoy", desc: "Delivered fast", icon: "https://img.icons8.com/3d-fluency/94/rocket.png" },
+              { step: "1", title: "Choose", desc: "Pick a service", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-green-600"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> },
+              { step: "2", title: "Order", desc: "Add items & pay", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-orange-500"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg> },
+              { step: "3", title: "Enjoy", desc: "Delivered fast", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-blue-500"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> },
             ].map((s) => (
               <div key={s.step} className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 md:w-16 md:h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-2">
-                  <img src={s.icon} alt={s.title} className="w-8 h-8 md:w-10 md:h-10 object-contain" />
+                  <span className="w-8 h-8 md:w-10 md:h-10">{s.icon}</span>
                 </div>
                 <div className="w-6 h-6 bg-[#16A34A] text-white text-xs font-black rounded-full flex items-center justify-center mb-1">{s.step}</div>
                 <p className="font-bold text-xs md:text-sm text-gray-800">{s.title}</p>
@@ -520,11 +527,16 @@ export default function HomePage() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Saved Addresses</p>
                   <div className="space-y-2">
                     {savedAddresses.map((addr) => {
-                      const icons: Record<string, string> = { Home: "https://img.icons8.com/3d-fluency/94/home.png", Office: "https://img.icons8.com/3d-fluency/94/office-building.png", Work: "https://img.icons8.com/3d-fluency/94/briefcase.png", Other: "https://img.icons8.com/3d-fluency/94/map-pin.png" }
+                      const addrIcons: Record<string, JSX.Element> = {
+                        Home: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+                        Office: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>,
+                        Work: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>,
+                        Other: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+                      }
                       const active = address === addr.address
                       return (
                         <div key={addr.id} onClick={() => selectAddress(addr)} className={`flex items-center gap-3 border rounded-xl px-4 py-3 cursor-pointer transition-colors ${active ? "border-[#16A34A] bg-green-50" : "border-gray-200"}`}>
-                          <img src={icons[addr.label] || icons.Other} alt={addr.label} className="w-7 h-7 shrink-0 object-contain" />
+                          <span className="w-7 h-7 shrink-0 text-[#16A34A]">{addrIcons[addr.label] || addrIcons.Other}</span>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-gray-800">{addr.label}</p>
                             <p className="text-[11px] text-gray-500 truncate">{addr.address}</p>
@@ -549,10 +561,15 @@ export default function HomePage() {
                   <p className="text-xs font-bold text-gray-700">New Address</p>
                   <div className="grid grid-cols-4 gap-2">
                     {(["Home", "Office", "Work", "Other"] as const).map((lbl) => {
-                      const lblIcons: Record<string, string> = { Home: "https://img.icons8.com/3d-fluency/94/home.png", Office: "https://img.icons8.com/3d-fluency/94/office-building.png", Work: "https://img.icons8.com/3d-fluency/94/briefcase.png", Other: "https://img.icons8.com/3d-fluency/94/map-pin.png" }
+                      const lblIcons: Record<string, JSX.Element> = {
+                            Home: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+                            Office: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>,
+                            Work: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>,
+                            Other: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+                          }
                       return (
                         <button key={lbl} onClick={() => setNewAddr((p) => ({ ...p, label: lbl }))} className={`py-2 rounded-lg text-xs font-bold border transition-colors ${newAddr.label === lbl ? "bg-[#16A34A] text-white border-[#16A34A]" : "bg-white text-gray-600 border-gray-200"}`}>
-                          <img src={lblIcons[lbl]} alt={lbl} className="w-5 h-5 mx-auto mb-0.5 object-contain" />{lbl}
+                          <span className="w-5 h-5 mx-auto mb-0.5 block">{lblIcons[lbl]}</span>{lbl}
                         </button>
                       )
                     })}
@@ -613,14 +630,18 @@ export default function HomePage() {
                 {activeOrders.map((order) => {
                   const statusLabel = order.status.replace(/_/g, " ")
                   const href = order.type === "grocery" ? `/order?id=${order.id}` : order.type === "laundry" ? "/laundry" : "/services"
-                  const icon = order.type === "grocery" ? "https://img.icons8.com/3d-fluency/94/shopping-cart.png" : order.type === "laundry" ? "https://img.icons8.com/3d-fluency/94/washing-machine.png" : "https://img.icons8.com/3d-fluency/94/maintenance.png"
+                  const icon = order.type === "grocery"
+                    ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-green-600"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                    : order.type === "laundry"
+                    ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-blue-600"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="12" cy="13" r="4"/><circle cx="12" cy="13" r="2"/></svg>
+                    : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-teal-600"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
                   const color = order.type === "grocery" ? "bg-green-50 text-green-800" : order.type === "laundry" ? "bg-blue-50 text-blue-700" : "bg-teal-50 text-teal-700"
                   const progressStatuses: Record<string, number> = { pending: 15, confirmed: 30, accepted: 30, preparing: 45, ready_for_pickup: 60, ready: 60, rider_accepted: 65, rider_at_store: 70, rider_picked_up: 75, rider_to_laundromat: 50, at_laundromat: 55, washing: 65, rider_return_pickup: 80, rider_returning: 85, out_for_delivery: 85 }
                   const progress = progressStatuses[order.status] || 20
                   return (
                     <a key={`${order.type}-${order.id}`} href={href} className="block px-4 py-3 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center gap-3">
-                        <img src={icon} alt={order.type} className="w-8 h-8 object-contain shrink-0" />
+                        <span className="w-8 h-8 shrink-0">{icon}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-semibold text-gray-800 truncate">{order.name}</p>
@@ -686,12 +707,12 @@ export default function HomePage() {
             <div className="px-6 -mt-6 relative">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3">
                 {[
-                  { icon: "https://img.icons8.com/3d-fluency/94/lightning-bolt.png", text: "Faster loading & instant access" },
-                  { icon: "https://img.icons8.com/3d-fluency/94/appointment-reminders.png", text: "Order notifications & updates" },
-                  { icon: "https://img.icons8.com/3d-fluency/94/home.png", text: "Launch from your home screen" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-yellow-500"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>, text: "Faster loading & instant access" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-blue-500"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>, text: "Order notifications & updates" },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-green-600"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>, text: "Launch from your home screen" },
                 ].map((b) => (
                   <div key={b.text} className="flex items-center gap-3">
-                    <img src={b.icon} alt="" className="w-8 h-8 object-contain shrink-0" />
+                    <span className="w-8 h-8 shrink-0">{b.icon}</span>
                     <p className="text-sm text-gray-700">{b.text}</p>
                   </div>
                 ))}

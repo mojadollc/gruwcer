@@ -1,4 +1,4 @@
-const CACHE_NAME = "88seven-v5"
+const CACHE_NAME = "88seven-v7"
 const OFFLINE_URL = "/offline.html"
 const STATIC_ASSETS = [
   "/icons/icon.svg",
@@ -34,17 +34,16 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return
   if (url.hostname !== self.location.hostname) return
 
-  // Next.js build assets — cache first (immutable)
+  // Next.js build assets — network first (content-hashed filenames ensure freshness)
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached
-        return fetch(request).then((res) => {
+      fetch(request)
+        .then((res) => {
           const clone = res.clone()
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
           return res
         })
-      })
+        .catch(() => caches.match(request))
     )
     return
   }
@@ -113,6 +112,11 @@ self.addEventListener("fetch", (event) => {
       })
       .catch(() => caches.match(request))
   )
+})
+
+// Force activate immediately when told to skip waiting
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting()
 })
 
 // Push notifications

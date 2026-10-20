@@ -63,32 +63,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </PullToRefresh>
         <Script id="sw-register" strategy="afterInteractive">
           {`
-            if('serviceWorker' in navigator && window.location.hostname !== 'localhost'){
-              window.addEventListener('load',()=>{
-                navigator.serviceWorker.register('/sw.js').then(reg=>{
-                  reg.addEventListener('updatefound',()=>{
-                    const newWorker=reg.installing;
-                    if(newWorker){
-                      newWorker.addEventListener('statechange',()=>{
-                        if(newWorker.state==='activated'&&navigator.serviceWorker.controller){
-                          // New version available — will activate on next visit
+            if('serviceWorker' in navigator){
+              // Unregister all old service workers and clear all caches first
+              navigator.serviceWorker.getRegistrations().then(regs=>{
+                regs.forEach(r=>r.unregister())
+              })
+              caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)))
+              // Re-register fresh only on non-localhost
+              if(window.location.hostname !== 'localhost'){
+                window.addEventListener('load',()=>{
+                  navigator.serviceWorker.register('/sw.js').then(reg=>{
+                    reg.addEventListener('updatefound',()=>{
+                      const w=reg.installing
+                      if(w) w.addEventListener('statechange',()=>{
+                        if(w.state==='installed'&&navigator.serviceWorker.controller){
+                          w.postMessage({type:'SKIP_WAITING'})
                         }
                       })
-                    }
+                    })
                   })
                 })
-              })
-            }
-          `}
-        </Script>
-        <Script id="pwa-update-check" strategy="afterInteractive">
-          {`
-            // Check for app updates every 30 min
-            setInterval(()=>{
-              if(navigator.serviceWorker&&navigator.serviceWorker.controller){
-                navigator.serviceWorker.controller.postMessage({type:'CHECK_UPDATE'})
               }
-            },1800000)
+            }
           `}
         </Script>
       </body>

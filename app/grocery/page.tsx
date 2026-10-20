@@ -219,39 +219,39 @@ export default function Home() {
   }) : []
 
   const fallbackCategoryList = [
-    { label: "Beverages", icon: "https://img.icons8.com/3d-fluency/94/juice.png" },
-    { label: "Snacks", icon: "https://img.icons8.com/3d-fluency/94/cookie.png" },
-    { label: "Household", icon: "https://img.icons8.com/3d-fluency/94/broom.png" },
-    { label: "Condiments", icon: "https://img.icons8.com/3d-fluency/94/salt.png" },
-    { label: "Frozen", icon: "https://img.icons8.com/3d-fluency/94/ice-cube.png" },
-    { label: "Personal Care", icon: "https://img.icons8.com/3d-fluency/94/shampoo.png" },
-    { label: "Canned Goods", icon: "https://img.icons8.com/3d-fluency/94/canned-food.png" },
-    { label: "Dairy & Eggs", icon: "https://img.icons8.com/3d-fluency/94/egg.png" },
-    { label: "Rice", icon: "https://img.icons8.com/3d-fluency/94/rice-bowl.png" },
-    { label: "Fruits & Vegetables", icon: "https://img.icons8.com/3d-fluency/94/broccoli.png" },
-    { label: "Meat & Seafood", icon: "https://img.icons8.com/3d-fluency/94/steak.png" },
-    { label: "Bread & Pastry", icon: "https://img.icons8.com/3d-fluency/94/bread.png" },
-    { label: "Medicine & Health", icon: "https://img.icons8.com/3d-fluency/94/pill.png" },
-    { label: "Others", icon: "https://img.icons8.com/3d-fluency/94/shopping-cart.png" },
+    { label: "Beverages", emoji: "🧃" },
+    { label: "Snacks", emoji: "🍪" },
+    { label: "Household", emoji: "🧹" },
+    { label: "Condiments", emoji: "🧂" },
+    { label: "Frozen", emoji: "🧊" },
+    { label: "Personal Care", emoji: "🧴" },
+    { label: "Canned Goods", emoji: "🥫" },
+    { label: "Dairy & Eggs", emoji: "🥚" },
+    { label: "Rice", emoji: "🍚" },
+    { label: "Fruits & Vegetables", emoji: "🥦" },
+    { label: "Meat & Seafood", emoji: "🥩" },
+    { label: "Bread & Pastry", emoji: "🍞" },
+    { label: "Medicine & Health", emoji: "💊" },
+    { label: "Others", emoji: "🛒" },
   ]
 
   const categoryList = storeCategories.length > 0
-    ? storeCategories.map((c) => ({ label: c.name, icon: c.imageUrl || "https://img.icons8.com/3d-fluency/94/opened-folder.png" }))
+    ? storeCategories.map((c) => ({ label: c.name, emoji: c.imageUrl ? undefined : "📂", icon: c.imageUrl }))
     : fallbackCategoryList
 
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
-  const isSameDay = new Date().getHours() < 15
+  const isSameDay = mounted && new Date().getHours() < 15
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
     <main className="min-h-screen bg-[#F4F5F7] pb-24" suppressHydrationWarning>
 
       {/* ── STICKY HEADER ── */}
-      <div className="sticky top-0 z-50 shadow-lg">
+      <div className="sticky top-0 z-50 shadow-lg" suppressHydrationWarning>
         {/* Top bar */}
-        <div className="bg-[#0B5E34] text-white text-xs">
-          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-8">
+        <div className="bg-[#0B5E34] text-white text-xs" suppressHydrationWarning>
+          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-8" suppressHydrationWarning>
             <button onClick={fetchUserLocation} disabled={detectingLocation} className="flex items-center gap-1.5 hover:text-yellow-300 transition-colors">
               <svg className={`w-3 h-3 shrink-0 ${detectingLocation ? "animate-pulse" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               <span className="max-w-[220px] truncate text-white/80">{detectingLocation ? "Detecting..." : userAddress || "Set your location"}</span>
@@ -336,7 +336,7 @@ export default function Home() {
           </div>
 
           {/* Delivery badge strip */}
-          <div className={`${isSameDay ? "bg-[#FF8A00]" : "bg-blue-600"} py-1.5`}>
+          <div className={`${isSameDay ? "bg-[#FF8A00]" : "bg-blue-600"} py-1.5`} suppressHydrationWarning>
             <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-2">
               <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
               <p className="text-white text-[11px] font-bold">
@@ -374,7 +374,7 @@ export default function Home() {
                 onClick={() => setSelectedCategory(cat.label)}
                 className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all whitespace-nowrap ${selectedCategory === cat.label ? "bg-[#16A34A] border-[#16A34A] text-white shadow-md" : "bg-white border-gray-200 text-gray-600 hover:border-[#16A34A] hover:text-[#16A34A]"}`}
               >
-                <img src={(cat as any).icon} alt={cat.label} className="w-4 h-4 object-contain" />
+                {(cat as any).icon ? <img src={(cat as any).icon} alt={cat.label} className="w-4 h-4 object-contain" /> : <span className="text-sm leading-none">{(cat as any).emoji}</span>}
                 {cat.label}
               </button>
             ))}
@@ -401,11 +401,15 @@ export default function Home() {
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {[...Array(10)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse shadow-sm">
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm relative">
+                  <div className="absolute inset-0 overflow-hidden rounded-2xl">
+                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+                  </div>
                   <div className="aspect-square bg-gray-100" />
                   <div className="p-3 space-y-2">
                     <div className="h-3 bg-gray-100 rounded w-3/4" />
-                    <div className="h-4 bg-gray-100 rounded w-1/2" />
+                    <div className="h-3 bg-gray-100 rounded w-1/2" />
+                    <div className="h-4 bg-gray-100 rounded w-2/3" />
                     <div className="h-8 bg-gray-100 rounded" />
                   </div>
                 </div>
@@ -644,7 +648,19 @@ function HeroSlider() {
     return () => clearInterval(t)
   }, [slides.length])
 
-  if (!loaded) return <div className="h-[180px] md:h-[260px] bg-gray-200 rounded-2xl animate-pulse" />
+  if (!loaded) return (
+    <div className="relative rounded-2xl overflow-hidden h-[180px] md:h-[260px] bg-gray-200">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+      </div>
+      <div className="absolute inset-0 flex flex-col justify-center p-6 md:p-10 gap-3">
+        <div className="h-5 w-24 bg-gray-300 rounded-full" />
+        <div className="h-8 w-48 bg-gray-300 rounded-xl" />
+        <div className="h-4 w-64 bg-gray-300 rounded-full" />
+        <div className="h-8 w-28 bg-gray-300 rounded-full mt-1" />
+      </div>
+    </div>
+  )
 
   const slide = slides[current]
   return (

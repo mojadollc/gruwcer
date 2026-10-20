@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-const POS_BASE = "https://pntos.payroo.xyz"
+const POS_BASE = "https://pos.payroo.xyz"
 const STORE_ID = "8807"
 
 function fixImageUrl(url: string | null | undefined): string {
