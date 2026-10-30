@@ -32,6 +32,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [pendingLaundry, setPendingLaundry] = useState(0)
   const [pendingPartners, setPendingPartners] = useState(0)
   const [pendingRiders, setPendingRiders] = useState(0)
+  const [notifications, setNotifications] = useState<{id:string;title:string;message:string;read:boolean}[]>([])
+  const [showNotifs, setShowNotifs] = useState(false)
+  const [newOrderToast, setNewOrderToast] = useState<string | null>(null)
+  const prevGrocery = useRef(0)
+  const prevLaundry = useRef(0)
+  const playSound = useNotificationSound()
+  const router = useRouter()
+  const pathname = usePathname()
 
   // Poll pending counts every 10s
   useEffect(() => {
@@ -57,14 +65,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const interval = setInterval(fetchCounts, 10000)
     return () => clearInterval(interval)
   }, [playSound])
-  const [notifications, setNotifications] = useState<{id:string;title:string;message:string;read:boolean}[]>([])
-  const [showNotifs, setShowNotifs] = useState(false)
-  const [newOrderToast, setNewOrderToast] = useState<string | null>(null)
-  const prevGrocery = useRef(0)
-  const prevLaundry = useRef(0)
-  const playSound = useNotificationSound()
-  const router = useRouter()
-  const pathname = usePathname()
 
   // Poll notifications every 15s
   useEffect(() => {
