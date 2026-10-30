@@ -367,7 +367,7 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          {/* ═══ LISTING MODE TAB ═══ */}}
+          {/* ═══ LISTING MODE TAB ═══ */}
           {tab === "listing" && (
             <div className="space-y-6">
               {/* Global Default */}
