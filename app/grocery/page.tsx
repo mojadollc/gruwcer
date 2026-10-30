@@ -171,8 +171,10 @@ export default function Home() {
     setSubmitting(true)
     try {
       const res = await fetch("/api/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart.map((i: any) => ({ name: i.product.name, price: i.product.price, quantity: i.quantity, productId: i.product.id, imageUrl: i.product.imageUrl })), total: cartTotal + cartDeposit + deliveryFee, customerId: user?.id || null, customerName: checkoutForm.name, customerPhone: checkoutForm.phone, deliveryAddress: checkoutForm.address + (checkoutForm.landmark ? ` (Landmark: ${checkoutForm.landmark})` : ""), status: "pending", paymentMethod: checkoutForm.paymentMethod, deliveryType: new Date().getHours() < 15 ? "same_day" : "next_day", notes: checkoutForm.notes || "", deliveryLat: checkoutForm.lat || undefined, deliveryLng: checkoutForm.lng || undefined }) })
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || "Order failed") }
       const order = await res.json()
       const orderId = order.id
+      if (!orderId) throw new Error("No order ID returned")
       setCart([]); setShowCheckout(false); setShowCart(false)
       if (checkoutForm.paymentMethod === "wallet") {
         await fetch("/api/wallet", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ownerId: user.id, ownerType: "customer", type: "deduction", amount: -(cartTotal + cartDeposit + deliveryFee), orderId, note: `Grocery order #${orderId.slice(-6).toUpperCase()}` }) })

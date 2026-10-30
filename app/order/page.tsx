@@ -24,6 +24,7 @@ function getStepIndex(status: string): number {
 function OrderTracker() {
   const searchParams = useSearchParams()
   const id = searchParams.get("id")
+  const validId = id && id !== "undefined" && id !== "null" ? id : null
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [riderRating, setRiderRating] = useState(0)
@@ -45,8 +46,8 @@ function OrderTracker() {
   const prevStatus = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!id) { setLoading(false); return }
-    const poll = () => fetch(`/api/orders/${id}`).then(r => r.ok ? r.json() : null).then((o: any) => {
+    if (!validId) { setLoading(false); return }
+    const poll = () => fetch(`/api/orders/${validId}`).then(r => r.ok ? r.json() : null).then((o: any) => {
       if (!o) return
       if (prevStatus.current && prevStatus.current !== o.status) {
         playSound()
@@ -61,22 +62,22 @@ function OrderTracker() {
     poll()
     const iv = setInterval(poll, 5000)
     return () => clearInterval(iv)
-  }, [id, playSound])
+  }, [validId, playSound])
 
   // Chat listener
   useEffect(() => {
-    if (!id) return
-    const pollChat = () => fetch(`/api/orders/${id}`).then(r => r.ok ? r.json() : null).then((o: any) => {
+    if (!validId) return
+    const pollChat = () => fetch(`/api/orders/${validId}`).then(r => r.ok ? r.json() : null).then((o: any) => {
       if (o?.chats) { setChatMessages(o.chats); setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100) }
     })
     pollChat()
     const iv = setInterval(pollChat, 3000)
     return () => clearInterval(iv)
-  }, [id])
+  }, [validId])
 
   const handleSendChat = async () => {
-    if (!chatInput.trim() || !id || !order) return
-    await fetch("/api/orders/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: id, senderId: order.customerId || "customer", senderName: order.customerName, senderRole: "customer", message: chatInput.trim() }) }).catch(() => {})
+    if (!chatInput.trim() || !validId || !order) return
+    await fetch("/api/orders/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: validId, senderId: order.customerId || "customer", senderName: order.customerName, senderRole: "customer", message: chatInput.trim() }) }).catch(() => {})
     setChatInput("")
   }
 
@@ -84,7 +85,7 @@ function OrderTracker() {
     if (!reportForm.subject || !reportForm.description || !order) return
     setReportSubmitting(true)
     await fetch("/api/admin/reports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-      orderId: id || undefined,
+      orderId: validId || undefined,
       customerId: order.customerId || "unknown",
       customerName: order.customerName,
       customerEmail: "",
@@ -97,7 +98,7 @@ function OrderTracker() {
     setReportSubmitted(true)
   }
 
-  if (!id) return <div className="min-h-screen flex items-center justify-center"><p className="text-green-500">No order ID provided</p></div>
+  if (!validId) return <div className="min-h-screen flex items-center justify-center"><p className="text-red-500 font-bold">Invalid order link. Please check your order history.</p></div>
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
@@ -135,7 +136,7 @@ function OrderTracker() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             <span className="font-bold text-sm">Back to Shop</span>
           </a>
-          <span className="text-xs text-white/70">#{id.slice(-8).toUpperCase()}</span>
+          <span className="text-xs text-white/70">#{validId!.slice(-8).toUpperCase()}</span>
         </div>
       </header>
 
@@ -343,7 +344,7 @@ function OrderTracker() {
             <button
               onClick={async () => {
                 if (!id || (!riderRating && !storeRating)) return
-                await fetch(`/api/orders/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ riderRating: riderRating || undefined, storeRating: storeRating || undefined, review: review || undefined }) })
+                await fetch(`/api/orders/${validId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ riderRating: riderRating || undefined, storeRating: storeRating || undefined, review: review || undefined }) })
                 setRatingSubmitted(true)
               }}
               disabled={!riderRating && !storeRating}
