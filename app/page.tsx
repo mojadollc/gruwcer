@@ -12,6 +12,7 @@ const ServiceIcon = ({ id }: { id: string }) => {
     travel: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>,
     healthcare: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
     food: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+    eload: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 6v4m0 0l-2-2m2 2l2-2"/><line x1="8" y1="18" x2="16" y2="18"/></svg>,
     errand: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
     bills: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
     more: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>,
@@ -22,6 +23,7 @@ const ServiceIcon = ({ id }: { id: string }) => {
 const SERVICES = [
   { id: "grocery", name: "Grocery", href: "/grocery", available: true, color: "text-green-600 bg-green-50" },
   { id: "laundry", name: "Laundry", href: "/laundry", available: true, color: "text-blue-600 bg-blue-50" },
+  { id: "eload", name: "E-Load", href: "/eload", available: true, color: "text-purple-600 bg-purple-50" },
   { id: "services", name: "Services", href: "/home-services", available: true, color: "text-orange-600 bg-orange-50" },
   { id: "travel", name: "Hotel & Flights", href: "/travel", available: true, color: "text-purple-600 bg-purple-50" },
   { id: "healthcare", name: "Clinics", href: "#", available: false, color: "text-red-500 bg-red-50" },

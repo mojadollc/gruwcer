@@ -485,3 +485,26 @@ model PlatformPromo {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+// ─── ELOAD ORDER ──────────────────────────────────────────────────────────────
+
+model EloadOrder {
+  id             String   @id @default(cuid())
+  customerId     String?
+  customerName   String   @default("")
+  customerPhone  String   @default("")
+  recipientPhone String
+  network        String
+  productName    String
+  promoId        String?
+  loadAmount     Float
+  serviceFee     Float    @default(13)
+  totalCharged   Float
+  paymongoId     String?
+  paymongoUrl    String?
+  gbitsRef       String?
+  status         String   @default("pending_payment") // pending_payment | paid | completed | load_failed
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
