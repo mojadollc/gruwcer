@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useLayoutEffect } from "react"
+import { useEffect, useState, useLayoutEffect, JSX } from "react"
 import { createPortal } from "react-dom"
 
 export default function Home() {
@@ -227,26 +227,31 @@ export default function Home() {
     return matchCat && matchSearch && p.stock > 0
   }) : []
 
-  const fallbackCategoryList = [
-    { label: "Beverages", emoji: "🧃" },
-    { label: "Snacks", emoji: "🍪" },
-    { label: "Household", emoji: "🧹" },
-    { label: "Condiments", emoji: "🧂" },
-    { label: "Frozen", emoji: "🧊" },
-    { label: "Personal Care", emoji: "🧴" },
-    { label: "Canned Goods", emoji: "🥫" },
-    { label: "Dairy & Eggs", emoji: "🥚" },
-    { label: "Rice", emoji: "🍚" },
-    { label: "Fruits & Vegetables", emoji: "🥦" },
-    { label: "Meat & Seafood", emoji: "🥩" },
-    { label: "Bread & Pastry", emoji: "🍞" },
-    { label: "Medicine & Health", emoji: "💊" },
-    { label: "Others", emoji: "🛒" },
-  ]
+  const CATEGORY_ICONS: Record<string, JSX.Element> = {
+    "Beverages": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l1 6H7L8 2z"/><path d="M7 8c0 8 2 12 5 12s5-4 5-12"/><path d="M5 11h2M17 11h2"/></svg>,
+    "Snacks": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>,
+    "Household": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    "Condiments": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6l1 5H8L9 3z"/><rect x="7" y="8" width="10" height="13" rx="2"/><path d="M10 12h4M10 15h4"/></svg>,
+    "Frozen": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 7l-5 5-5-5"/><path d="M17 17l-5-5-5 5"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M7 7l5 5 5-5"/><path d="M7 17l5-5 5 5"/></svg>,
+    "Personal Care": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M9 2h6a2 2 0 012 2v1H7V4a2 2 0 012-2z"/><rect x="5" y="5" width="14" height="17" rx="2"/><path d="M9 11h6M9 15h4"/></svg>,
+    "Canned Goods": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="7" ry="2.5"/><path d="M5 5v14c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V5"/><path d="M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/></svg>,
+    "Dairy & Eggs": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C9 2 6 6 6 10c0 4.4 2.7 8 6 8s6-3.6 6-8c0-4-3-8-6-8z"/><path d="M9 13c.5 1.5 1.5 2.5 3 2.5s2.5-1 3-2.5"/></svg>,
+    "Rice": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 19h16M6 19V9a6 6 0 0112 0v10"/><path d="M9 9h6M9 13h6"/></svg>,
+    "Fruits & Vegetables": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7z"/><circle cx="12" cy="9" r="2.5"/></svg>,
+    "Meat & Seafood": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 3.5c2.5 2.5 2.5 6.5 0 9L9 18l-3 3-1-1 3-3-5.5-5.5c-1-1-1-2.5 0-3.5L14.5 3.5z"/><path d="M20 4l-3 3"/></svg>,
+    "Bread & Pastry": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M6 8c0-3.3 2.7-6 6-6s6 2.7 6 6c1.1 0 2 .9 2 2v2H4v-2c0-1.1.9-2 2-2z"/><rect x="3" y="12" width="18" height="8" rx="2"/></svg>,
+    "Medicine & Health": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>,
+    "Others": <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>,
+  }
+
+  const getCategoryIcon = (name: string) => {
+    const key = Object.keys(CATEGORY_ICONS).find(k => name.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(name.toLowerCase()))
+    return key ? CATEGORY_ICONS[key] : CATEGORY_ICONS["Others"]
+  }
 
   const categoryList = storeCategories.length > 0
-    ? storeCategories.map((c) => ({ label: c.name, emoji: c.imageUrl ? undefined : "📂", icon: c.imageUrl }))
-    : fallbackCategoryList
+    ? storeCategories.map((c: any) => ({ label: c.name, icon: c.imageUrl || null }))
+    : Object.keys(CATEGORY_ICONS).map(k => ({ label: k, icon: null }))
 
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
@@ -358,46 +363,93 @@ export default function Home() {
       </div>
 
       {/* ── MAIN CONTENT ── */}
-      <div className="max-w-7xl mx-auto px-4 mt-4">
+      <div className="max-w-7xl mx-auto px-3 md:px-6 mt-4">
 
-        {/* HERO SLIDER */}
+        {/* HERO SLIDER — full width */}
         <HeroSlider />
 
-        {/* CATEGORY PILLS */}
-        <div className="mt-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-black text-sm text-gray-800 uppercase tracking-wide">Shop by Category</h2>
-            <span className="text-[10px] text-gray-400">{categories.length} categories</span>
-          </div>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-            <button
-              onClick={() => setSelectedCategory("All")}
-              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all ${selectedCategory === "All" ? "bg-[#16A34A] border-[#16A34A] text-white shadow-md" : "bg-white border-gray-200 text-gray-600 hover:border-[#16A34A] hover:text-[#16A34A]"}`}
-            >
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-              All
+        {/* MOBILE: horizontal category scroll */}
+        <div className="md:hidden mt-4 -mx-3 px-3">
+          <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1">
+            <button onClick={() => setSelectedCategory("All")}
+              className={`shrink-0 flex flex-col items-center gap-1 transition-all`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${selectedCategory === "All" ? "bg-[#16A34A] shadow-lg shadow-green-200" : "bg-white border border-gray-100 shadow-sm"}`}>
+                <svg className={`w-6 h-6 ${selectedCategory === "All" ? "text-white" : "text-gray-500"}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              </div>
+              <span className={`text-[10px] font-bold ${selectedCategory === "All" ? "text-[#16A34A]" : "text-gray-500"}`}>All</span>
             </button>
             {categoryList.map((cat) => (
-              <button
-                key={cat.label}
-                onClick={() => setSelectedCategory(cat.label)}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border-2 transition-all whitespace-nowrap ${selectedCategory === cat.label ? "bg-[#16A34A] border-[#16A34A] text-white shadow-md" : "bg-white border-gray-200 text-gray-600 hover:border-[#16A34A] hover:text-[#16A34A]"}`}
-              >
-                {(cat as any).icon ? <img src={(cat as any).icon} alt={cat.label} className="w-4 h-4 object-contain" /> : <span className="text-sm leading-none">{(cat as any).emoji}</span>}
-                {cat.label}
+              <button key={cat.label} onClick={() => setSelectedCategory(cat.label)}
+                className="shrink-0 flex flex-col items-center gap-1 transition-all">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${selectedCategory === cat.label ? "bg-[#16A34A] shadow-lg shadow-green-200" : "bg-white border border-gray-100 shadow-sm"}`}>
+                  {cat.icon
+                    ? <img src={cat.icon} alt={cat.label} className="w-7 h-7 object-contain" />
+                    : <span className={`w-6 h-6 ${selectedCategory === cat.label ? "text-white" : "text-[#16A34A]"}`}>{getCategoryIcon(cat.label)}</span>}
+                </div>
+                <span className={`text-[10px] font-bold max-w-[56px] text-center leading-tight ${selectedCategory === cat.label ? "text-[#16A34A]" : "text-gray-500"}`}>{cat.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* PRODUCTS SECTION */}
-        <div className="mt-4">
+        {/* DESKTOP: two-column layout */}
+        <div className="hidden md:flex gap-6 mt-6">
+
+          {/* LEFT SIDEBAR — categories */}
+          <aside className="w-56 shrink-0">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-[120px]">
+              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <p className="text-xs font-black text-gray-700 uppercase tracking-wider">Categories</p>
+              </div>
+              <div className="py-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+                <button onClick={() => setSelectedCategory("All")}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-all ${selectedCategory === "All" ? "bg-[#16A34A] text-white" : "text-gray-600 hover:bg-gray-50"}`}>
+                  <span className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${selectedCategory === "All" ? "bg-white/20" : "bg-gray-100"}`}>
+                    <svg className={`w-4 h-4 ${selectedCategory === "All" ? "text-white" : "text-gray-500"}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                  </span>
+                  All Products
+                  {selectedCategory === "All" && <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>}
+                </button>
+                {categoryList.map((cat) => (
+                  <button key={cat.label} onClick={() => setSelectedCategory(cat.label)}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-all ${selectedCategory === cat.label ? "bg-[#16A34A] text-white" : "text-gray-600 hover:bg-gray-50"}`}>
+                    <span className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${selectedCategory === cat.label ? "bg-white/20" : "bg-green-50"}`}>
+                      {cat.icon
+                        ? <img src={cat.icon} alt={cat.label} className="w-5 h-5 object-contain" />
+                        : <span className={`w-4 h-4 ${selectedCategory === cat.label ? "text-white" : "text-[#16A34A]"}`}>{getCategoryIcon(cat.label)}</span>}
+                    </span>
+                    <span className="truncate">{cat.label}</span>
+                    {selectedCategory === cat.label && <svg className="w-4 h-4 ml-auto shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* RIGHT: products */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-black text-lg text-gray-800">{selectedCategory === "All" ? "All Products" : selectedCategory}</h2>
+                {!loading && <p className="text-xs text-gray-400 mt-0.5">{filtered.length} items available</p>}
+              </div>
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="text-xs text-[#16A34A] font-bold flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  Clear search
+                </button>
+              )}
+            </div>
+            <ProductGrid loading={loading} filtered={filtered} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} setSearchQuery={setSearchQuery} addToCart={addToCart} />
+          </div>
+        </div>
+
+        {/* MOBILE: products below categories */}
+        <div className="md:hidden mt-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="font-black text-base text-gray-800">
-                {selectedCategory === "All" ? "All Products" : selectedCategory}
-              </h2>
-              {!loading && <p className="text-xs text-gray-400 mt-0.5">{filtered.length} items available</p>}
+              <h2 className="font-black text-base text-gray-800">{selectedCategory === "All" ? "All Products" : selectedCategory}</h2>
+              {!loading && <p className="text-xs text-gray-400 mt-0.5">{filtered.length} items</p>}
             </div>
             {searchQuery && (
               <button onClick={() => setSearchQuery("")} className="text-xs text-[#16A34A] font-bold flex items-center gap-1">
@@ -406,40 +458,7 @@ export default function Home() {
               </button>
             )}
           </div>
-
-          {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {[...Array(10)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm relative">
-                  <div className="absolute inset-0 overflow-hidden rounded-2xl">
-                    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-                  </div>
-                  <div className="aspect-square bg-gray-100" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-3 bg-gray-100 rounded w-3/4" />
-                    <div className="h-3 bg-gray-100 rounded w-1/2" />
-                    <div className="h-4 bg-gray-100 rounded w-2/3" />
-                    <div className="h-8 bg-gray-100 rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              </div>
-              <p className="text-gray-500 font-bold">No products found</p>
-              <p className="text-gray-400 text-sm mt-1">Try a different category or search term</p>
-              <button onClick={() => { setSelectedCategory("All"); setSearchQuery("") }} className="mt-4 bg-[#16A34A] text-white px-6 py-2 rounded-full text-sm font-bold">Browse All</button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {filtered.map((product) => (
-                <ProductCard key={product.id} product={product} onAdd={addToCart} />
-              ))}
-            </div>
-          )}
+          <ProductGrid loading={loading} filtered={filtered} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} setSearchQuery={setSearchQuery} addToCart={addToCart} />
         </div>
       </div>
 
@@ -592,6 +611,43 @@ export default function Home() {
         <PopupModal banner={popupBanners[0]} onClose={() => setShowPopup(false)} />
       )}
     </main>
+  )
+}
+
+function ProductGrid({ loading, filtered, selectedCategory, setSelectedCategory, setSearchQuery, addToCart }: any) {
+  if (loading) return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm relative">
+          <div className="absolute inset-0 overflow-hidden rounded-2xl">
+            <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+          </div>
+          <div className="aspect-square bg-gray-100" />
+          <div className="p-3 space-y-2">
+            <div className="h-3 bg-gray-100 rounded w-3/4" />
+            <div className="h-3 bg-gray-100 rounded w-1/2" />
+            <div className="h-8 bg-gray-100 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+  if (filtered.length === 0) return (
+    <div className="bg-white rounded-2xl p-16 text-center shadow-sm">
+      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+      </div>
+      <p className="text-gray-500 font-bold">No products found</p>
+      <p className="text-gray-400 text-sm mt-1">Try a different category or search term</p>
+      <button onClick={() => { setSelectedCategory("All"); setSearchQuery("") }} className="mt-4 bg-[#16A34A] text-white px-6 py-2 rounded-full text-sm font-bold">Browse All</button>
+    </div>
+  )
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {filtered.map((product: any) => (
+        <ProductCard key={product.id} product={product} onAdd={addToCart} />
+      ))}
+    </div>
   )
 }
 
