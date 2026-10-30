@@ -22,7 +22,6 @@ type LaundryOrder = {
   partnerName?: string
   riderId?: string
   riderName?: string
-  customerId: string
   createdAt: any
 }
 
