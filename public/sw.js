@@ -1,4 +1,4 @@
-const CACHE_NAME = "88seven-v7"
+const CACHE_NAME = "gruwcer-v1"
 const OFFLINE_URL = "/offline.html"
 const STATIC_ASSETS = [
   "/icons/icon.svg",
