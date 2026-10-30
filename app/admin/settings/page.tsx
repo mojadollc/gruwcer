@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS = {
 }
 
 
-type SettingsTab = "delivery" | "commission" | "payments" | "listing"
+type SettingsTab = "delivery" | "commission" | "payments" | "eload" | "listing"
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<any>(DEFAULT_SETTINGS)
@@ -32,6 +32,7 @@ export default function AdminSettingsPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodsConfig>({
     cod: true, wallet: true, qrph: true, ewallet: true, bank: true, xendit: true,
   })
+  const [eloadConfig, setEloadConfig] = useState({ paymongoFee: 10, gruwcerFee: 3, enabled: true })
   const [listingConfig, setListingConfig] = useState<any>({ defaultMode: "free", defaultMinBalance: 100 })
   const [partners, setPartners] = useState<any[]>([])
   const [partnerOverrides, setPartnerOverrides] = useState<Record<string, { mode: string; min: number }>>({})
@@ -94,6 +95,7 @@ export default function AdminSettingsPage() {
     { key: "delivery", label: "Delivery & Fees", icon: "🚚" },
     { key: "commission", label: "Commissions", icon: "💰" },
     { key: "payments", label: "Payments", icon: "💳" },
+    { key: "eload", label: "E-Load", icon: "⚡" },
     { key: "listing", label: "Listing Mode", icon: "🏪" },
   ]
 
@@ -286,7 +288,86 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          {/* ═══ LISTING MODE TAB ═══ */}
+          {/* ═══ E-LOAD TAB ═══ */}
+          {tab === "eload" && (
+            <div className="space-y-6">
+              <Section title="E-Load Service" desc="Configure PayMongo fees and GBits API settings for the E-Load feature">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-gray-50 rounded-xl px-5 py-4 border border-gray-100">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">E-Load Service</p>
+                      <p className="text-[10px] text-gray-400">Allow customers to buy mobile/game/cable load</p>
+                    </div>
+                    <button onClick={() => setEloadConfig(c => ({ ...c, enabled: !c.enabled }))} className={`relative w-11 h-6 rounded-full transition-colors ${eloadConfig.enabled ? "bg-green-500" : "bg-gray-300"}`}>
+                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${eloadConfig.enabled ? "translate-x-5" : ""}`} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Field label="PayMongo Fee (₱)">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₱</span>
+                        <input type="number" min={0} value={eloadConfig.paymongoFee} onChange={e => setEloadConfig(c => ({ ...c, paymongoFee: Number(e.target.value) }))} className="input-field pl-8" />
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1">Fee charged by PayMongo per transaction</p>
+                    </Field>
+                    <Field label="Gruwcer Service Fee (₱)">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₱</span>
+                        <input type="number" min={0} value={eloadConfig.gruwcerFee} onChange={e => setEloadConfig(c => ({ ...c, gruwcerFee: Number(e.target.value) }))} className="input-field pl-8" />
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1">Platform fee added on top of load amount</p>
+                    </Field>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-4">
+                    <p className="text-[10px] text-purple-600 font-semibold uppercase mb-2">Fee Preview</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[50, 100, 300].map(amt => (
+                        <div key={amt} className="text-center bg-white rounded-lg p-2.5 border border-purple-100">
+                          <p className="text-[10px] text-gray-400">₱{amt} load</p>
+                          <p className="text-base font-bold text-purple-600">₱{amt + eloadConfig.paymongoFee + eloadConfig.gruwcerFee}</p>
+                          <p className="text-[9px] text-gray-400">total charged</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="PayMongo Configuration" desc="API keys for PayMongo payment processing">
+                <div className="space-y-3">
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                    <p className="text-xs font-bold text-blue-700 mb-1">Current Key Mode</p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                      <p className="text-sm font-bold text-gray-800">Test Mode</p>
+                      <span className="text-[10px] bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded-full">sk_test_...</span>
+                    </div>
+                    <p className="text-[10px] text-blue-600 mt-2">To switch to live mode, update <code className="bg-blue-100 px-1 rounded">PAYMONGO_SECRET_KEY</code> in your VPS <code className="bg-blue-100 px-1 rounded">.env</code> file and redeploy.</p>
+                  </div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Webhook Setup</p>
+                    <p className="text-xs text-gray-500">Register this URL in your <a href="https://dashboard.paymongo.com" target="_blank" className="text-blue-600 font-bold underline">PayMongo Dashboard</a> under Webhooks:</p>
+                    <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 font-mono text-xs text-gray-700 break-all">
+                      https://gruwcer.com/api/eload-webhook
+                    </div>
+                    <p className="text-[10px] text-gray-400">Event to listen: <span className="font-bold">link.payment.paid</span></p>
+                  </div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">GBits API Status</p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <p className="text-sm text-gray-700">Business ID: <span className="font-mono text-xs">{process.env.NEXT_PUBLIC_GBITS_BUSINESS_ID || "aab5db19-..."}</span></p>
+                    </div>
+                    <p className="text-[10px] text-gray-400">GBits credentials are managed in the VPS <code className="bg-gray-100 px-1 rounded">.env</code> file.</p>
+                  </div>
+                </div>
+              </Section>
+            </div>
+          )}
+
+          {/* ═══ LISTING MODE TAB ═══ */}}
           {tab === "listing" && (
             <div className="space-y-6">
               {/* Global Default */}

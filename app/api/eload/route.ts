@@ -38,13 +38,13 @@ async function getToken(): Promise<string> {
 async function gbitsGet(path: string): Promise<any> {
   const token = await getToken()
   const r = await fetch(`${GBITS_API_URL}${path}`, {
-    headers: { Authorization: token, Accept: "application/json", "User-Agent": UA },
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json", "User-Agent": UA },
   })
   if (r.status === 401) {
     cachedToken = null
     const fresh = await authenticate()
     return fetch(`${GBITS_API_URL}${path}`, {
-      headers: { Authorization: fresh, Accept: "application/json", "User-Agent": UA },
+      headers: { Authorization: `Bearer ${fresh}`, Accept: "application/json", "User-Agent": UA },
     }).then(r => r.json())
   }
   return r.json()
@@ -100,6 +100,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ products: skuCache.products })
     }
     const skuData = await gbitsGet(`/eload/sku/${GBITS_BUSINESS_ID}`)
+    console.log("GBits SKU response:", JSON.stringify(skuData).slice(0, 300))
     const products = mapSkus(skuData.errorCode === 0 ? skuData.content || [] : [])
     skuCache = { products, at: Date.now() }
     return NextResponse.json({ products })
@@ -122,14 +123,14 @@ export async function POST(req: NextRequest) {
 
     let r = await fetch(`${GBITS_API_URL}/eload/buy?${params}`, {
       method: "POST",
-      headers: { Authorization: token, Accept: "application/json", "User-Agent": UA },
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json", "User-Agent": UA },
     })
     if (r.status === 401) {
       cachedToken = null
       const fresh = await authenticate()
       r = await fetch(`${GBITS_API_URL}/eload/buy?${params}`, {
         method: "POST",
-        headers: { Authorization: fresh, Accept: "application/json", "User-Agent": UA },
+        headers: { Authorization: `Bearer ${fresh}`, Accept: "application/json", "User-Agent": UA },
       })
     }
     const result = await r.json()
