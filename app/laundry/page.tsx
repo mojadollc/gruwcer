@@ -213,6 +213,9 @@ export default function LaundryPage() {
     const res = await fetch("/api/laundry-orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(orderData) })
     const docRef = await res.json()
 
+    // Notify admin of new laundry booking
+    await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "admin", title: "New Laundry Booking 🧺", message: `${profile?.name || "Customer"} booked ${selectedService.name} (${form.weight}kg) from ${selectedPartner.shopName}` }) })
+
     // Payroo Wallet payment
     if (form.paymentMethod === "wallet") {
       await fetch("/api/wallet", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ownerId: user.id, ownerType: "customer", type: "deduction", amount: -totalPrice, orderId: docRef.id, note: `Laundry - ${selectedService.name} (${form.weight}kg)` }) })

@@ -22,6 +22,7 @@ type LaundryOrder = {
   partnerName?: string
   riderId?: string
   riderName?: string
+  customerId: string
   createdAt: any
 }
 
@@ -78,8 +79,24 @@ export default function AdminLaundryPage() {
     return () => clearInterval(interval)
   }, [])
 
+  const LAUNDRY_CUSTOMER_NOTIFS: Record<string, { title: string; message: string }> = {
+    rider_to_customer: { title: "Rider On the Way 🏍️", message: "A rider is heading to your address to pick up your laundry." },
+    rider_picked_up: { title: "Laundry Picked Up 🧺", message: "Your laundry has been picked up and is heading to the shop." },
+    at_laundromat: { title: "At the Laundry Shop", message: "Your laundry has arrived at the shop." },
+    washing: { title: "Washing in Progress 🫧", message: "Your laundry is currently being washed." },
+    ready: { title: "Laundry Done! ✅", message: "Your laundry is clean and ready. A rider will return it soon." },
+    rider_returning: { title: "On the Way Back 🏍️", message: "Your clean laundry is on its way back to you!" },
+    delivered: { title: "Laundry Delivered! 🎉", message: "Your laundry has been delivered. Thank you for using Gruwcer!" },
+    cancelled: { title: "Order Cancelled", message: "Your laundry order has been cancelled." },
+  }
+
   const handleStatus = async (orderId: string, status: string) => {
     await fetch(`/api/laundry-orders/${orderId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) })
+    const order = orders.find((o) => o.id === orderId)
+    const notif = LAUNDRY_CUSTOMER_NOTIFS[status]
+    if (order?.customerId && notif) {
+      await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: order.customerId, title: notif.title, message: notif.message }) })
+    }
   }
 
   const handleAssignRider = async (orderId: string, driverId: string) => {
@@ -92,6 +109,11 @@ export default function AdminLaundryPage() {
     const nearest = drivers.find((d: any) => d.isOnline && d.status === "active") || null
     if (nearest) {
       await fetch(`/api/laundry-orders/${orderId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ riderId: nearest.id, riderName: nearest.name, status: nextStatus }) })
+      const order = orders.find((o) => o.id === orderId)
+      const notif = LAUNDRY_CUSTOMER_NOTIFS[nextStatus]
+      if (order?.customerId && notif) {
+        await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: order.customerId, title: notif.title, message: notif.message }) })
+      }
     } else {
       alert("No online riders available nearby. Please assign manually.")
     }

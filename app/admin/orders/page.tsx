@@ -111,9 +111,11 @@ export default function AdminOrdersPage() {
     const order = orders.find((o) => o.id === orderId)
     if (order) {
       const customerId = (order as any).customerId
-      if (status === "confirmed" && customerId) await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: customerId, title: "Order Confirmed", message: "Your order has been confirmed", orderId }) })
-      if (status === "preparing" && customerId) await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: customerId, title: "Preparing Your Order", message: "Your order is being prepared", orderId }) })
-      if (status === "delivered" && customerId) await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: customerId, title: "Delivered!", message: "Your order has been delivered", orderId }) })
+      if (status === "confirmed" && customerId) await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: customerId, title: "Order Confirmed ✅", message: "Your order has been confirmed and will be prepared shortly.", orderId }) })
+      if (status === "preparing" && customerId) await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: customerId, title: "Preparing Your Order 👨‍🍳", message: "Your order is being prepared.", orderId }) })
+      if (status === "ready_for_pickup" && customerId) await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: customerId, title: "Order Ready 📦", message: "Your order is packed and waiting for a rider.", orderId }) })
+      if (status === "out_for_delivery" && customerId) await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: customerId, title: "On the Way! 🏍️", message: "Your order is out for delivery.", orderId }) })
+      if (status === "delivered" && customerId) await fetch("/api/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipientType: "customer", recipientId: customerId, title: "Delivered! 🎉", message: "Your order has been delivered. Enjoy!", orderId }) })
     }
   }
 

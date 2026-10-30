@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { clearAuth } from "@/lib/auth"
 import Link from "next/link"
+import { useNotificationSound } from "@/app/components/useNotificationSound"
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "Dashboard", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
@@ -41,17 +42,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         fetch("/api/counts?type=partners").then((r) => r.json()),
         fetch("/api/counts?type=riders").then((r) => r.json()),
       ])
-      setPendingGrocery(grocery.count || 0)
-      setPendingLaundry(laundry.count || 0)
+      const g = grocery.count || 0
+      const l = laundry.count || 0
+      if (g > prevGrocery.current) { playSound(); setNewOrderToast(`🛒 New grocery order received!`); setTimeout(() => setNewOrderToast(null), 5000) }
+      else if (l > prevLaundry.current) { playSound(); setNewOrderToast(`🧺 New laundry booking received!`); setTimeout(() => setNewOrderToast(null), 5000) }
+      prevGrocery.current = g
+      prevLaundry.current = l
+      setPendingGrocery(g)
+      setPendingLaundry(l)
       setPendingPartners(partners.count || 0)
       setPendingRiders(riders.count || 0)
     }
     fetchCounts()
     const interval = setInterval(fetchCounts, 10000)
     return () => clearInterval(interval)
-  }, [])
+  }, [playSound])
   const [notifications, setNotifications] = useState<{id:string;title:string;message:string;read:boolean}[]>([])
   const [showNotifs, setShowNotifs] = useState(false)
+  const [newOrderToast, setNewOrderToast] = useState<string | null>(null)
+  const prevGrocery = useRef(0)
+  const prevLaundry = useRef(0)
+  const playSound = useNotificationSound()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -159,6 +170,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* MAIN CONTENT */}
       <div className="flex-1 md:ml-[240px] mt-14 md:mt-0 mb-16 md:mb-0">
+        {/* New Order Toast */}
+        {newOrderToast && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] bg-[#16A34A] text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-bounce">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+            <span className="text-sm font-bold">{newOrderToast}</span>
+            <button onClick={() => setNewOrderToast(null)} className="text-white/70 hover:text-white ml-2 text-lg leading-none">&times;</button>
+          </div>
+        )}
         {/* Admin Notification Bar */}
         <div className="hidden md:flex items-center justify-end px-6 py-2 bg-white border-b border-gray-100">
           <div className="relative">
