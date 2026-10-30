@@ -22,10 +22,20 @@ export async function POST(req: NextRequest) {
     const order = await prisma.order.create({
       data: {
         ...data,
+        type: data.type || "grocery",
         items: { create: items.map((i: any) => ({ ...i, productId: i.productId || null })) },
       },
       include: { items: true },
     })
+    // Notify admin
+    await prisma.notification.create({
+      data: {
+        recipientType: "admin",
+        title: "New Grocery Order 🛒",
+        message: `${order.customerName} placed an order for ₱${order.total.toFixed(2)}`,
+        orderId: order.id,
+      }
+    })
     return NextResponse.json(order)
-  } catch { return NextResponse.json({ error: "Server error" }, { status: 500 }) }
+  } catch (e) { console.error(e); return NextResponse.json({ error: "Server error" }, { status: 500 }) }
 }

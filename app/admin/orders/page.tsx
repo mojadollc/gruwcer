@@ -259,7 +259,7 @@ export default function AdminOrdersPage() {
                   <div className="px-5 py-3 bg-yellow-50 border-b border-yellow-100 flex items-center justify-between">
                     <div>
                       <p className="font-bold text-sm text-gray-800">{order.customerName}</p>
-                      <p className="text-xs text-gray-500">{order.items.length} items • {order.deliveryAddress.slice(0, 40)}...</p>
+                      <p className="text-xs text-gray-500">{order.items?.length || 0} items • ₱{order.total?.toFixed(2)} • {order.deliveryAddress?.slice(0, 40)}{order.deliveryAddress?.length > 40 ? "..." : ""}</p>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => handleReject(order.id)} className="px-4 py-2 text-xs font-bold rounded-lg border border-green-200 text-green-700 hover:bg-green-50 transition-colors">
@@ -288,6 +288,12 @@ export default function AdminOrdersPage() {
                         <p className="text-xs text-gray-400">Address</p>
                         <p className="text-sm font-medium">{order.deliveryAddress}</p>
                       </div>
+                      {order.type && (
+                        <div>
+                          <p className="text-xs text-gray-400">Type</p>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 capitalize">{order.type}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Items */}
@@ -301,7 +307,7 @@ export default function AdminOrdersPage() {
                         )}
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {order.items.map((item: any, i: number) => (
+                        {(order.items || []).map((item: any, i: number) => (
                           <span key={i} className={`text-xs px-2 py-0.5 rounded ${item.outOfStock ? "bg-green-50 text-green-400 line-through" : "bg-gray-100"}`}>
                             {item.name} ×{item.quantity}{item.outOfStock ? " — OUT OF STOCK" : ""}
                           </span>

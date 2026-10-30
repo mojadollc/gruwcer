@@ -23,7 +23,6 @@ const ServiceIcon = ({ id }: { id: string }) => {
 const SERVICES = [
   { id: "grocery", name: "Grocery", href: "/grocery", available: true, color: "text-green-600 bg-green-50" },
   { id: "laundry", name: "Laundry", href: "/laundry", available: true, color: "text-blue-600 bg-blue-50" },
-  { id: "eload", name: "E-Load", href: "/eload", available: true, color: "text-purple-600 bg-purple-50" },
   { id: "services", name: "Services", href: "/home-services", available: true, color: "text-orange-600 bg-orange-50" },
   { id: "travel", name: "Hotel & Flights", href: "/travel", available: true, color: "text-purple-600 bg-purple-50" },
   { id: "healthcare", name: "Clinics", href: "#", available: false, color: "text-red-500 bg-red-50" },
@@ -387,8 +386,8 @@ export default function HomePage() {
         {/* ═══ SERVICES GRID ═══ */}
         <div className="mt-5 md:mt-8 bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100">
           <h2 className="font-bold text-sm md:text-base text-gray-800 mb-4">Shop by Department</h2>
-          <div className="grid grid-cols-5 md:grid-cols-9 gap-2 md:gap-4">
-            {SERVICES.map((s) => (
+          <div className="grid grid-cols-5 md:grid-cols-10 gap-2 md:gap-4">
+            {[...SERVICES.slice(0, 4), { id: "eload", name: "E-Load", href: "/eload", available: true, color: "text-purple-600 bg-purple-50" }, ...SERVICES.slice(4)].map((s) => (
               <a
                 key={s.id}
                 href={s.available ? s.href : undefined}
@@ -428,7 +427,7 @@ export default function HomePage() {
         {/* ═══ QUICK ORDER CARDS (mobile horizontal scroll) ═══ */}
         <div className="mt-5 md:mt-6">
           <h2 className="font-bold text-sm md:text-base text-gray-800 mb-3">Quick Order</h2>
-          <div className="flex md:grid md:grid-cols-3 gap-3 overflow-x-auto scrollbar-hide pb-1">
+          <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto scrollbar-hide pb-1">
             <a href="/grocery" className="flex-shrink-0 w-[72%] md:w-auto bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-4 md:p-6 text-white relative overflow-hidden hover:shadow-lg transition-shadow">
               <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
               <p className="text-[10px] font-bold uppercase opacity-70">Same-day delivery</p>
@@ -442,6 +441,13 @@ export default function HomePage() {
               <p className="text-lg font-black mt-1">Laundry</p>
               <p className="text-xs opacity-80 mt-0.5">Wash, dry & fold service</p>
               <span className="inline-block mt-3 bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">Book now</span>
+            </a>
+            <a href="/eload" className="flex-shrink-0 w-[72%] md:w-auto bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-4 md:p-6 text-white relative overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
+              <p className="text-[10px] font-bold uppercase opacity-70">Mobile & games</p>
+              <p className="text-lg font-black mt-1">E-Load</p>
+              <p className="text-xs opacity-80 mt-0.5">Smart, Globe, TNT & more</p>
+              <span className="inline-block mt-3 bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">Load now</span>
             </a>
             <a href="/home-services" className="flex-shrink-0 w-[72%] md:w-auto bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-4 md:p-6 text-white relative overflow-hidden hover:shadow-lg transition-shadow">
               <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
