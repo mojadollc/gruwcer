@@ -53,11 +53,13 @@ export default function Home() {
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`)
         const data = await res.json()
-        const addr = data.display_name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+        const a = data.address || {}
+        const parts = [a.house_number, a.road, a.suburb || a.village || a.neighbourhood, a.city || a.town || a.municipality, a.state].filter(Boolean)
+        const addr = parts.length > 0 ? parts.join(", ") : data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
         setUserAddress(addr)
         localStorage.setItem("user_location", JSON.stringify({ address: addr, lat: latitude, lng: longitude }))
       } catch {
-        setUserAddress(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
+        setUserAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
       } finally { setDetectingLocation(false) }
     }, () => setDetectingLocation(false), { enableHighAccuracy: true })
   }
@@ -153,7 +155,9 @@ export default function Home() {
         if (!address) {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`)
           const data = await res.json()
-          address = data.display_name || ""
+          const a = data.address || {}
+          const parts = [a.house_number, a.road, a.suburb || a.village || a.neighbourhood, a.city || a.town || a.municipality, a.state].filter(Boolean)
+          address = parts.length > 0 ? parts.join(", ") : data.display_name || ""
         }
         setCheckoutForm((prev) => ({ ...prev, address: address || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, lat: latitude, lng: longitude }))
       } catch { setCheckoutForm((prev) => ({ ...prev, address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}` })) }
@@ -191,8 +195,12 @@ export default function Home() {
   const handleLogout = () => { localStorage.removeItem("token"); localStorage.removeItem("user"); setUser(null); setProfile(null) }
 
   useEffect(() => {
-    if (profile && !checkoutForm.name) setCheckoutForm((prev) => ({ ...prev, name: profile.name || prev.name, phone: profile.phone || prev.phone, address: profile.address || prev.address }))
+    if (profile && !checkoutForm.name) setCheckoutForm((prev) => ({ ...prev, name: profile.name || prev.name, phone: profile.phone || prev.phone, address: profile.address || userAddress || prev.address }))
   }, [profile])
+
+  useEffect(() => {
+    if (userAddress && !checkoutForm.address) setCheckoutForm((prev) => ({ ...prev, address: userAddress, lat: userLat, lng: userLng }))
+  }, [userAddress])
 
   useEffect(() => {
     async function load() {

@@ -90,9 +90,11 @@ export default function HomePage() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&addressdetails=1`)
           const data = await res.json()
-          const addr = data.address?.road ? `${data.address.road}, ${data.address.city || data.address.town || ""}` : data.display_name?.split(",").slice(0, 2).join(",") || ""
+          const a = data.address || {}
+          const parts = [a.house_number, a.road, a.suburb || a.village || a.neighbourhood, a.city || a.town || a.municipality, a.state].filter(Boolean)
+          const addr = parts.length > 0 ? parts.join(", ") : data.display_name?.split(",").slice(0, 2).join(",") || ""
           setAddress(addr)
           localStorage.setItem("user_location", JSON.stringify({ address: addr, lat: pos.coords.latitude, lng: pos.coords.longitude }))
         } catch { setAddress("Location detected") }
@@ -168,9 +170,11 @@ export default function HomePage() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&addressdetails=1`)
           const data = await res.json()
-          const addr = data.display_name?.split(",").slice(0, 3).join(",") || `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`
+          const a = data.address || {}
+          const parts = [a.house_number, a.road, a.suburb || a.village || a.neighbourhood, a.city || a.town || a.municipality, a.state].filter(Boolean)
+          const addr = parts.length > 0 ? parts.join(", ") : data.display_name?.split(",").slice(0, 3).join(",") || `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`
           setNewAddr((p) => ({ ...p, address: addr, lat: pos.coords.latitude, lng: pos.coords.longitude }))
         } catch {}
         setLocatingNew(false)
