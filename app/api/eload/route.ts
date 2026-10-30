@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server"
 const GBITS_API_URL = process.env.GBITS_API_URL || "https://api.gbits.ph"
 const GBITS_BUSINESS_ID = process.env.GBITS_BUSINESS_ID!
 const GBITS_BUSINESS_CODE = process.env.GBITS_BUSINESS_CODE!
-const GBITS_USERNAME = process.env.GBITS_USERNAME!
-const GBITS_PASSWORD = process.env.GBITS_PASSWORD!
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
 let cachedToken: string | null = null
@@ -18,10 +16,13 @@ function getTokenExpiry(token: string): number {
 }
 
 async function authenticate(): Promise<string> {
+  const username = process.env.GBITS_USERNAME
+  const password = process.env.GBITS_PASSWORD
+  if (!username || !password) throw new Error("GBits credentials not configured")
   const r = await fetch(`${GBITS_API_URL}/auth`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": UA },
-    body: JSON.stringify({ username: GBITS_USERNAME, password: GBITS_PASSWORD }),
+    body: JSON.stringify({ username, password }),
   })
   const data = await r.json()
   if (data.errorCode !== 0) throw new Error(data.message || "GBits auth failed")
