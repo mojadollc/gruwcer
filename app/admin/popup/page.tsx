@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import ImageUpload from "../components/ImageUpload"
 // All data via Postgres API
 
 export default function AdminPopupPage() {
@@ -86,14 +87,8 @@ export default function AdminPopupPage() {
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Image URL *</label>
-                  <input
-                    type="text"
-                    value={form.imageUrl}
-                    onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                    placeholder="https://example.com/promo-banner.jpg"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#16A34A]"
-                  />
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Image *</label>
+                  <ImageUpload folder="popup" value={form.imageUrl} onChange={(url) => setForm({ ...form, imageUrl: url })} />
                   <p className="text-[10px] text-gray-400 mt-1">Recommended: 600×800px or 800×600px (JPG/PNG/WebP)</p>
                 </div>
 

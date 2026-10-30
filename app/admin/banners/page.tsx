@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
+import ImageUpload from "../components/ImageUpload"
 
 type Banner = {
   id: string
@@ -157,8 +157,8 @@ export default function AdminBannersPage() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500">Image URL (optional)</label>
-                <input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mt-1 outline-none" />
+                <label className="text-xs font-semibold text-gray-500">Image (optional)</label>
+                <div className="mt-1"><ImageUpload folder="banners" value={form.imageUrl} onChange={(url) => setForm({ ...form, imageUrl: url })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

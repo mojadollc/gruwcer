@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import ImageUpload from "../components/ImageUpload"
 // All data via Postgres API
 
 const defaultSlide = {
@@ -130,8 +131,8 @@ export default function AdminHero() {
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description" rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#16A34A] resize-none" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Image URL</label>
-                  <input type="text" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://example.com/image.png" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#16A34A]" />
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Image</label>
+                  <ImageUpload folder="hero" value={form.imageUrl} onChange={(url) => setForm({ ...form, imageUrl: url })} />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">Link URL (optional)</label>
