@@ -386,25 +386,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ═══ SERVICES GRID ═══ */}
-        <div className="mt-5 md:mt-8 bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-sm md:text-base text-gray-800 mb-4">Shop by Department</h2>
-          <div className="grid grid-cols-5 md:grid-cols-10 gap-2 md:gap-4">
-            {[...SERVICES.slice(0, 4), { id: "eload", name: "E-Load", href: "/eload", available: true, color: "text-purple-600 bg-purple-50" }, ...SERVICES.slice(5)].map((s) => (
-              <a
-                key={s.id}
-                href={s.available ? s.href : undefined}
-                className={`relative flex flex-col items-center gap-1.5 group ${!s.available ? "opacity-50" : ""}`}
-              >
-                {!s.available && <span className="absolute -top-1 left-1/2 -translate-x-1/2 z-10 bg-[#FF8A00] text-white text-[7px] font-bold px-1 py-px rounded-sm whitespace-nowrap">SOON</span>}
-                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center ${s.available ? s.color + " group-hover:scale-110 transition-transform" : "bg-gray-100 text-gray-400"}`}>
-                  <span className="w-6 h-6 md:w-7 md:h-7"><ServiceIcon id={s.id} /></span>
-                </div>
-                <span className="text-[10px] md:text-xs text-gray-600 font-medium text-center leading-tight">{s.name}</span>
-              </a>
-            ))}
-          </div>
-        </div>
 
         {/* ═══ PROMOS / DEALS ═══ */}
         {promos.length > 0 && (
