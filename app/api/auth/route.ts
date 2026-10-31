@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
       // Resolve referrer if referralCode provided
       const { referralCode: usedCode } = body
-      let referrer = null
+      let referrer: Awaited<ReturnType<typeof prisma.user.findFirst>> = null
       if (usedCode) {
         referrer = await prisma.user.findFirst({ where: { referralCode: usedCode.toUpperCase() } })
       }
