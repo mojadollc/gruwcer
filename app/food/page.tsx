@@ -35,7 +35,7 @@ export default function FoodPage() {
   const categoryRefs = useRef<Record<string,HTMLDivElement|null>>({})
 
   useEffect(() => {
-    const u = getUser(); if (u) { setUser(u); setCheckoutForm(f=>({...f,name:u.name||"",phone:u.phone||""})) }
+    const u = getUser() as any; if (u) { setUser(u); setCheckoutForm(f=>({...f,name:u.name||"",phone:u.phone||""})) }
   }, [])
 
   useEffect(() => {
