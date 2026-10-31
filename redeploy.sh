@@ -14,8 +14,9 @@ git pull origin main
 echo "→ Installing packages..."
 npm ci --production=false
 
-echo "→ Generating Prisma client..."
+echo "→ Syncing Prisma schema to DB..."
 npx prisma generate
+npx prisma db push --accept-data-loss
 
 echo "→ Building..."
 npm run build

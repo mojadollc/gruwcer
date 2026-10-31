@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS = {
 }
 
 
-type SettingsTab = "delivery" | "commission" | "payments" | "eload" | "listing"
+type SettingsTab = "delivery" | "commission" | "payments" | "eload" | "rental" | "listing"
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<any>(DEFAULT_SETTINGS)
@@ -33,6 +33,7 @@ export default function AdminSettingsPage() {
     cod: true, wallet: true, qrph: true, ewallet: true, bank: true, xendit: true,
   })
   const [eloadConfig, setEloadConfig] = useState({ paymongoFee: 10, gruwcerFee: 3, enabled: true })
+  const [rentalCommission, setRentalCommission] = useState(10)
   const [listingConfig, setListingConfig] = useState<any>({ defaultMode: "free", defaultMinBalance: 100 })
   const [partners, setPartners] = useState<any[]>([])
   const [partnerOverrides, setPartnerOverrides] = useState<Record<string, { mode: string; min: number }>>({})
@@ -96,6 +97,7 @@ export default function AdminSettingsPage() {
     { key: "commission", label: "Commissions", icon: "💰" },
     { key: "payments", label: "Payments", icon: "💳" },
     { key: "eload", label: "E-Load", icon: "⚡" },
+    { key: "rental", label: "Rentals", icon: "🔧" },
     { key: "listing", label: "Listing Mode", icon: "🏪" },
   ]
 
@@ -362,6 +364,73 @@ export default function AdminSettingsPage() {
                     </div>
                     <p className="text-[10px] text-gray-400">GBits credentials are managed in the VPS <code className="bg-gray-100 px-1 rounded">.env</code> file.</p>
                   </div>
+                </div>
+              </Section>
+            </div>
+          )}
+
+          {/* ═══ RENTAL TAB ═══ */}
+          {tab === "rental" && (
+            <div className="space-y-6">
+              <Section title="Rental Commission" desc="Platform fee taken from each rental transaction">
+                <div className="flex items-start gap-6">
+                  <Field label="Commission Rate">
+                    <div className="relative w-28">
+                      <input type="number" min={0} max={100} value={rentalCommission} onChange={e => setRentalCommission(Number(e.target.value))} className="input-field pr-8 text-center text-lg font-bold" />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">%</span>
+                    </div>
+                  </Field>
+                  <div className="flex-1 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 rounded-xl p-4">
+                    <p className="text-[10px] text-gray-500 uppercase font-semibold mb-2">Example: ₱500/day × 3 days = ₱1,500</p>
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <p className="text-xs text-gray-500">Owner gets</p>
+                        <p className="text-xl font-bold text-green-600">₱{Math.round(1500 * (100 - rentalCommission) / 100)}</p>
+                      </div>
+                      <div className="w-px h-10 bg-gray-200" />
+                      <div>
+                        <p className="text-xs text-gray-500">Platform gets</p>
+                        <p className="text-xl font-bold text-[#16A34A]">₱{Math.round(1500 * rentalCommission / 100)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Escrow & Payment Flow" desc="How rental payments are handled">
+                <div className="space-y-3">
+                  {[
+                    { step: "1", title: "Renter pays 50% downpayment", desc: "Held in escrow by Gruwcer via PayMongo. Not released to owner yet.", color: "bg-blue-50 border-blue-100 text-blue-700" },
+                    { step: "2", title: "Item is picked up / rental starts", desc: "Admin marks booking as Active. Owner is notified.", color: "bg-yellow-50 border-yellow-100 text-yellow-700" },
+                    { step: "3", title: "Rental ends — item returned", desc: "Admin marks as Completed. Renter pays remaining 50% balance directly to owner.", color: "bg-green-50 border-green-100 text-green-700" },
+                    { step: "4", title: "Platform fee deducted", desc: `${rentalCommission}% of total rental amount is the platform's earnings.`, color: "bg-orange-50 border-orange-100 text-orange-700" },
+                  ].map(s => (
+                    <div key={s.step} className={`flex items-start gap-3 border rounded-xl px-4 py-3 ${s.color}`}>
+                      <span className="w-6 h-6 rounded-full bg-white/60 flex items-center justify-center text-xs font-black shrink-0">{s.step}</span>
+                      <div>
+                        <p className="text-sm font-bold">{s.title}</p>
+                        <p className="text-[11px] mt-0.5 opacity-80">{s.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+
+              <Section title="Security Requirements" desc="What's required before a listing goes live">
+                <div className="space-y-2">
+                  {[
+                    { label: "Owner must upload valid Government ID", icon: "🪪", required: true },
+                    { label: "Admin manually approves each listing", icon: "✅", required: true },
+                    { label: "Renter must have verified phone number", icon: "📱", required: true },
+                    { label: "Renter must agree to rental terms", icon: "📋", required: true },
+                    { label: "Damage deposit set by owner (optional)", icon: "🛡️", required: false },
+                  ].map(r => (
+                    <div key={r.label} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
+                      <span className="text-lg">{r.icon}</span>
+                      <p className="text-sm text-gray-700 flex-1">{r.label}</p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${r.required ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>{r.required ? "REQUIRED" : "OPTIONAL"}</span>
+                    </div>
+                  ))}
                 </div>
               </Section>
             </div>
