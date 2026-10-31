@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import Script from "next/script"
 import PullToRefresh from "./components/PullToRefresh"
+import DesktopShell from "./components/DesktopShell"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -58,9 +59,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="assetlinks.json" href="/.well-known/assetlinks.json" />
       </head>
       <body className={`${inter.className} bg-[#F4F5F7] antialiased`} suppressHydrationWarning>
-        <PullToRefresh>
-          {children}
-        </PullToRefresh>
+        <DesktopShell>
+          <PullToRefresh>
+            {children}
+          </PullToRefresh>
+        </DesktopShell>
         <Script id="sw-register" strategy="afterInteractive">
           {`
             if('serviceWorker' in navigator){
