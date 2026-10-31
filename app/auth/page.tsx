@@ -33,6 +33,7 @@ function AuthPage() {
   }
 
   // Partner / Rider form state
+  const [partnerType, setPartnerType] = useState("")
   const [partnerForm, setPartnerForm] = useState({ email: "", password: "", shopName: "", ownerName: "", phone: "", address: "", landmark: "", lat: 0, lng: 0 })
   const [riderForm, setRiderForm] = useState({ email: "", password: "", name: "", phone: "" })
   const [detectingLoc, setDetectingLoc] = useState(false)
@@ -97,11 +98,27 @@ function AuthPage() {
 
   const handlePartnerRegister = async () => {
     setError("")
-    if (!partnerForm.shopName || !partnerForm.ownerName || !partnerForm.phone || !partnerForm.address) { setError("All fields are required"); return }
+    if (!partnerForm.shopName || !partnerForm.ownerName || !partnerForm.phone) { setError("All fields are required"); return }
     setLoading(true)
     try {
-      const data = await callAuth({ action: "register", email: partnerForm.email, password: partnerForm.password, name: partnerForm.ownerName, shopName: partnerForm.shopName, phone: partnerForm.phone, address: partnerForm.address, landmark: partnerForm.landmark, lat: partnerForm.lat, lng: partnerForm.lng, role: "partner" })
+      const data = await callAuth({
+        action: "register",
+        email: partnerForm.email,
+        password: partnerForm.password,
+        name: partnerForm.ownerName,
+        shopName: partnerForm.shopName,
+        phone: partnerForm.phone,
+        address: partnerForm.address,
+        landmark: partnerForm.landmark,
+        lat: partnerForm.lat,
+        lng: partnerForm.lng,
+        role: "partner",
+        partnerType,
+      })
       setAuth(data.token, data.user)
+      // Redirect based on service type
+      if (partnerType === "rentals") { window.location.href = "/rentals/post"; return }
+      if (partnerType === "vehicles") { window.location.href = "/vehicles/post"; return }
       window.location.href = "/partner"
     } catch (e: any) { setError(e.message) } finally { setLoading(false) }
   }
@@ -130,7 +147,7 @@ function AuthPage() {
 
         <div className="flex bg-white/10 rounded-xl p-1 mb-4">
           {(["login", "partner", "rider"] as const).map((t) => (
-            <button key={t} onClick={() => { setTab(t); setError(""); setSuccess(""); setOtpSent(false); setOtp(""); setPhone(""); setName("") }}
+            <button key={t} onClick={() => { setTab(t); setError(""); setSuccess(""); setOtpSent(false); setOtp(""); setPhone(""); setName(""); setPartnerType("") }}
               className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition-colors capitalize ${tab === t ? "bg-white text-[#16A34A]" : "text-white/70"}`}>
               {t === "login" ? "Customer" : t === "partner" ? "Partner" : "Rider"}
             </button>
@@ -214,37 +231,101 @@ function AuthPage() {
           ) : (
             <>
               <h2 className="font-bold text-lg text-gray-800 mb-1">Partner Registration</h2>
-              <p className="text-xs text-gray-400 mb-4">Register your laundromat as a partner</p>
-              {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg mb-3">{error}</div>}
-              <div className="space-y-3">
-                <input placeholder="Shop / Business Name" value={partnerForm.shopName} onChange={(e) => setPartnerForm({ ...partnerForm, shopName: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
-                <input placeholder="Owner Full Name" value={partnerForm.ownerName} onChange={(e) => setPartnerForm({ ...partnerForm, ownerName: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
-                <input placeholder="Phone Number" value={partnerForm.phone} onChange={(e) => setPartnerForm({ ...partnerForm, phone: e.target.value.replace(/[^0-9]/g, "") })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
-                <div className="relative">
-                  <input placeholder="Shop Address" value={partnerForm.address} onChange={(e) => setPartnerForm({ ...partnerForm, address: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-24 text-sm outline-none focus:border-blue-600" />
-                  <button type="button" onClick={() => {
-                    if (!navigator.geolocation) return
-                    setDetectingLoc(true)
-                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                      try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
-                        const d = await res.json()
-                        setPartnerForm((f) => ({ ...f, address: d.display_name || "", lat: pos.coords.latitude, lng: pos.coords.longitude }))
-                      } catch {} finally { setDetectingLoc(false) }
-                    }, () => setDetectingLoc(false), { enableHighAccuracy: true })
-                  }} disabled={detectingLoc} className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-lg">
-                    {detectingLoc ? "..." : "📍 Detect"}
+
+              {!partnerType ? (
+                <>
+                  <p className="text-xs text-gray-400 mb-4">Choose the service you want to offer</p>
+                  {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg mb-3">{error}</div>}
+                  <div className="space-y-2">
+                    {[
+                      { type: "laundry", emoji: "🧺", label: "Laundry Shop", desc: "Offer wash, dry & fold pickup/delivery" },
+                      { type: "food", emoji: "🍔", label: "Food Restaurant", desc: "List your restaurant on Food to Go" },
+                      { type: "home_services", emoji: "🏠", label: "Home Services", desc: "Aircon, plumbing, electrical & more" },
+                      { type: "rentals", emoji: "🔧", label: "Tool & Equipment Rental", desc: "Rent out your tools and equipment" },
+                      { type: "vehicles", emoji: "🚗", label: "Vehicle Rental", desc: "Rent out your motorbike, car or e-bike" },
+                    ].map(s => (
+                      <button key={s.type} onClick={() => { setPartnerType(s.type); setError("") }}
+                        className="w-full flex items-center gap-3 border-2 border-gray-100 hover:border-blue-400 hover:bg-blue-50 rounded-xl px-4 py-3 transition-all text-left">
+                        <span className="text-2xl shrink-0">{s.emoji}</span>
+                        <div>
+                          <p className="text-sm font-bold text-gray-800">{s.label}</p>
+                          <p className="text-[11px] text-gray-400">{s.desc}</p>
+                        </div>
+                        <svg className="w-4 h-4 text-gray-300 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => { setPartnerType(""); setError("") }} className="flex items-center gap-1 text-xs text-blue-600 font-medium mb-3 hover:underline">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+                    Change service type
                   </button>
-                </div>
-                {partnerForm.lat > 0 && <p className="text-[9px] text-green-600">✓ Location pinned</p>}
-                <input placeholder="Landmark" value={partnerForm.landmark} onChange={(e) => setPartnerForm({ ...partnerForm, landmark: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
-                <input type="email" placeholder="Email" value={partnerForm.email} onChange={(e) => setPartnerForm({ ...partnerForm, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
-                <input type="password" placeholder="Password" value={partnerForm.password} onChange={(e) => setPartnerForm({ ...partnerForm, password: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
-                <button onClick={handlePartnerRegister} disabled={loading || !partnerForm.email || !partnerForm.password}
-                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
-                  {loading ? "Registering..." : "Register as Partner"}
-                </button>
-              </div>
+
+                  {/* Service badge */}
+                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 mb-4">
+                    <span className="text-lg">{({ laundry: "🧺", food: "🍔", home_services: "🏠", rentals: "🔧", vehicles: "🚗" } as Record<string,string>)[partnerType]}</span>
+                    <div>
+                      <p className="text-xs font-bold text-blue-800">{({ laundry: "Laundry Shop", food: "Food Restaurant", home_services: "Home Services", rentals: "Tool & Equipment Rental", vehicles: "Vehicle Rental" } as Record<string,string>)[partnerType]}</p>
+                      <p className="text-[10px] text-blue-500">Partner registration</p>
+                    </div>
+                  </div>
+
+                  {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg mb-3">{error}</div>}
+
+                  <div className="space-y-3">
+                    {/* Food: redirect to admin-managed onboarding */}
+                    {partnerType === "food" && (
+                      <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 text-xs text-orange-700">
+                        🍔 Restaurant partners are onboarded by our team. Fill in your details and we&apos;ll contact you.
+                      </div>
+                    )}
+                    {/* Rentals / Vehicles: redirect to post page after register */}
+                    {(partnerType === "rentals" || partnerType === "vehicles") && (
+                      <div className="bg-green-50 border border-green-100 rounded-xl p-3 text-xs text-green-700">
+                        ✅ After registering, you&apos;ll be redirected to post your listing.
+                      </div>
+                    )}
+
+                    <input placeholder="Business / Shop Name" value={partnerForm.shopName} onChange={e => setPartnerForm(f => ({ ...f, shopName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
+                    <input placeholder="Owner Full Name" value={partnerForm.ownerName} onChange={e => setPartnerForm(f => ({ ...f, ownerName: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
+                    <input placeholder="Phone Number" value={partnerForm.phone} onChange={e => setPartnerForm(f => ({ ...f, phone: e.target.value.replace(/[^0-9]/g, "") }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
+
+                    {/* Address only for location-based services */}
+                    {["laundry", "food", "home_services"].includes(partnerType) && (
+                      <>
+                        <div className="relative">
+                          <input placeholder="Business Address" value={partnerForm.address} onChange={e => setPartnerForm(f => ({ ...f, address: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-24 text-sm outline-none focus:border-blue-600" />
+                          <button type="button" onClick={() => {
+                            if (!navigator.geolocation) return
+                            setDetectingLoc(true)
+                            navigator.geolocation.getCurrentPosition(async (pos) => {
+                              try {
+                                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+                                const d = await res.json()
+                                setPartnerForm(f => ({ ...f, address: d.display_name || "", lat: pos.coords.latitude, lng: pos.coords.longitude }))
+                              } catch {} finally { setDetectingLoc(false) }
+                            }, () => setDetectingLoc(false), { enableHighAccuracy: true })
+                          }} disabled={detectingLoc} className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-lg">
+                            {detectingLoc ? "..." : "📍 Detect"}
+                          </button>
+                        </div>
+                        {partnerForm.lat > 0 && <p className="text-[9px] text-green-600">✓ Location pinned</p>}
+                        <input placeholder="Landmark (optional)" value={partnerForm.landmark} onChange={e => setPartnerForm(f => ({ ...f, landmark: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
+                      </>
+                    )}
+
+                    <input type="email" placeholder="Email" value={partnerForm.email} onChange={e => setPartnerForm(f => ({ ...f, email: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
+                    <input type="password" placeholder="Password" value={partnerForm.password} onChange={e => setPartnerForm(f => ({ ...f, password: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
+
+                    <button onClick={handlePartnerRegister} disabled={loading || !partnerForm.email || !partnerForm.password || !partnerForm.shopName || !partnerForm.ownerName || !partnerForm.phone}
+                      className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+                      {loading ? "Registering..." : "Register as Partner"}
+                    </button>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>

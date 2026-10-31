@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET!
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { action, email, password, name, phone, role, shopName, address, landmark, lat, lng, skills } = body
+    const { action, email, password, name, phone, role, shopName, address, landmark, lat, lng, skills, partnerType } = body
 
     if (action === "login") {
       if (!email || !password) return NextResponse.json({ error: "Email and password required" }, { status: 400 })
@@ -34,8 +34,17 @@ export async function POST(req: NextRequest) {
           shopName: shopName || null, address: address || null,
           landmark: landmark || null, lat: lat || null, lng: lng || null,
           skills: skills || [],
+          // store partnerType in services field as metadata
+          services: partnerType ? { partnerType } : undefined,
         }
       })
+      // Notify admin of new partner registration
+      if (userRole === "partner" || userRole === "provider") {
+        const typeLabel: Record<string, string> = { laundry: "Laundry Shop", food: "Food Restaurant", home_services: "Home Services", rentals: "Tool Rental", vehicles: "Vehicle Rental" }
+        await prisma.notification.create({
+          data: { recipientType: "admin", title: "New Partner Registration", message: `${name || shopName} registered as ${typeLabel[partnerType] || userRole}` }
+        })
+      }
       const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: "30d" })
       return NextResponse.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status } })
     }
