@@ -132,6 +132,10 @@ model User {
   // Wallet
   walletBalance   Float      @default(0)
 
+  // Referral
+  referralCode    String?    @unique
+  referredById    String?
+
   // Saved addresses (customer)
   savedAddresses  Json?      // [{id, label, address, lat, lng}]
 
@@ -768,6 +772,30 @@ model Suggestion {
   adminNote    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ─── REFERRAL ────────────────────────────────────────────────────────────────
+
+enum ReferralStatus {
+  pending    // referred user registered but not yet a verified partner
+  credited   // ₱150 credited to referrer
+  cancelled  // admin cancelled
+}
+
+model Referral {
+  id            String         @id @default(cuid())
+  referrerId    String         // user who shared the code
+  referrerName  String
+  referredId    String?        // user who used the code (set on registration)
+  referredName  String?
+  referredEmail String?
+  referredPhone String?
+  partnerType   String?        // what service they registered as
+  status        ReferralStatus @default(pending)
+  rewardAmount  Float          @default(150)
+  creditedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 // ─── ELOAD ORDER ──────────────────────────────────────────────────────────────

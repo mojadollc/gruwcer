@@ -9,6 +9,7 @@ function AuthPage() {
   const searchParams = useSearchParams()
   const redirect = searchParams.get("redirect") || "/"
   const defaultTab = searchParams.get("tab") || "login"
+  const refCode = searchParams.get("ref") || ""
   const [tab, setTab] = useState<"login" | "partner" | "rider">(defaultTab as any)
 
   // Customer phone OTP state
@@ -45,6 +46,7 @@ function AuthPage() {
 
   // Partner / Rider form state
   const [partnerType, setPartnerType] = useState("")
+  const [referralCodeInput, setReferralCodeInput] = useState(refCode)
   const [partnerForm, setPartnerForm] = useState({ email: "", password: "", shopName: "", ownerName: "", phone: "", address: "", landmark: "", lat: 0, lng: 0 })
   const [riderForm, setRiderForm] = useState({ email: "", password: "", name: "", phone: "" })
   const [detectingLoc, setDetectingLoc] = useState(false)
@@ -175,6 +177,7 @@ function AuthPage() {
         lng: partnerForm.lng,
         role: "partner",
         partnerType,
+        referralCode: referralCodeInput.trim() || undefined,
       })
       setAuth(data.token, data.user)
       // Redirect based on service type
@@ -410,6 +413,17 @@ function AuthPage() {
 
                     <input type="email" placeholder="Email" value={partnerForm.email} onChange={e => setPartnerForm(f => ({ ...f, email: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
                     <input type="password" placeholder="Password" value={partnerForm.password} onChange={e => setPartnerForm(f => ({ ...f, password: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600" />
+
+                    {/* Referral code */}
+                    <div className="relative">
+                      <input
+                        placeholder="Referral code (optional)"
+                        value={referralCodeInput}
+                        onChange={e => setReferralCodeInput(e.target.value.toUpperCase())}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-600 font-mono tracking-widest"
+                      />
+                      {referralCodeInput && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-green-600 font-bold">🎁 Code applied</span>}
+                    </div>
 
                     <button onClick={handlePartnerRegister} disabled={loading || !partnerForm.email || !partnerForm.password || !partnerForm.shopName || !partnerForm.ownerName || !partnerForm.phone}
                       className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">

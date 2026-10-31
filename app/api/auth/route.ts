@@ -39,6 +39,17 @@ export async function POST(req: NextRequest) {
       if (exists) return NextResponse.json({ error: "Email already registered" }, { status: 400 })
       const passwordHash = await bcrypt.hash(password, 10)
       const userRole = role || "customer"
+
+      // Generate unique referral code
+      const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+
+      // Resolve referrer if referralCode provided
+      const { referralCode: usedCode } = body
+      let referrer = null
+      if (usedCode) {
+        referrer = await prisma.user.findFirst({ where: { referralCode: usedCode.toUpperCase() } })
+      }
+
       const user = await prisma.user.create({
         data: {
           email, passwordHash, name: name || shopName || "", phone: phone || "",
@@ -46,15 +57,33 @@ export async function POST(req: NextRequest) {
           shopName: shopName || null, address: address || null,
           landmark: landmark || null, lat: lat || null, lng: lng || null,
           skills: skills || [],
-          // store partnerType in services field as metadata
           services: partnerType ? { partnerType } : undefined,
+          referralCode,
+          referredById: referrer?.id || null,
         }
       })
+
+      // Create pending referral record if referred
+      if (referrer && (userRole === "partner" || userRole === "provider")) {
+        await prisma.referral.create({
+          data: {
+            referrerId: referrer.id,
+            referrerName: referrer.name,
+            referredId: user.id,
+            referredName: user.name,
+            referredEmail: user.email || "",
+            referredPhone: user.phone || "",
+            partnerType: partnerType || userRole,
+            status: "pending",
+          }
+        })
+      }
+
       // Notify admin of new partner registration
       if (userRole === "partner" || userRole === "provider") {
         const typeLabel: Record<string, string> = { laundry: "Laundry Shop", food: "Food Restaurant", home_services: "Home Services", rentals: "Tool Rental", vehicles: "Vehicle Rental" }
         await prisma.notification.create({
-          data: { recipientType: "admin", title: "New Partner Registration", message: `${name || shopName} registered as ${typeLabel[partnerType] || userRole}` }
+          data: { recipientType: "admin", title: "New Partner Registration", message: `${name || shopName} registered as ${typeLabel[partnerType] || userRole}${referrer ? ` (referred by ${referrer.name})` : ""}` }
         })
       }
       const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: "30d" })

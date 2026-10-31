@@ -461,6 +461,13 @@ export default function HomePage() {
               <p className="text-xs opacity-80 mt-0.5">Rent a ride for your trip</p>
               <span className="inline-block mt-3 bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">Browse now</span>
             </a>
+            <a href="/referral" className="flex-shrink-0 w-[72%] md:w-auto bg-gradient-to-br from-emerald-500 to-green-700 rounded-2xl p-4 md:p-6 text-white relative overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
+              <p className="text-[10px] font-bold uppercase opacity-70">Earn money</p>
+              <p className="text-lg font-black mt-1">Refer & Earn</p>
+              <p className="text-xs opacity-80 mt-0.5">Get ₱150 per partner you refer</p>
+              <span className="inline-block mt-3 bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">Start referring</span>
+            </a>
           </div>
         </div>
 
