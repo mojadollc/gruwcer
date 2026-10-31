@@ -14,6 +14,7 @@ const ServiceIcon = ({ id }: { id: string }) => {
     food: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
     eload: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 6v4m0 0l-2-2m2 2l2-2"/><line x1="8" y1="18" x2="16" y2="18"/></svg>,
     rental: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>,
+    vehicle: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v9a2 2 0 01-2 2h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>,
     bills: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
     more: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="w-full h-full"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>,
   }
@@ -26,6 +27,7 @@ const SERVICES = [
   { id: "services", name: "Services", href: "/home-services", available: true, color: "text-orange-600 bg-orange-50" },
   { id: "travel", name: "Hotel & Flights", href: "/travel", available: true, color: "text-purple-600 bg-purple-50" },
   { id: "rentals", name: "Rentals", href: "/rentals", available: true, color: "text-amber-600 bg-amber-50" },
+  { id: "vehicle", name: "Vehicles", href: "/vehicles", available: true, color: "text-blue-600 bg-blue-50" },
   { id: "healthcare", name: "Clinics", href: "#", available: false, color: "text-red-500 bg-red-50" },
   { id: "food", name: "Food To Go", href: "/food", available: true, color: "text-yellow-600 bg-yellow-50" },
   { id: "errand", name: "Errands", href: "#", available: false, color: "text-teal-600 bg-teal-50" },
@@ -469,6 +471,13 @@ export default function HomePage() {
               <p className="text-[10px] font-bold uppercase opacity-70">Rent from neighbors</p>
               <p className="text-lg font-black mt-1">Tool Rentals</p>
               <p className="text-xs opacity-80 mt-0.5">Drills, pressure washers & more</p>
+              <span className="inline-block mt-3 bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">Browse now</span>
+            </a>
+            <a href="/vehicles" className="flex-shrink-0 w-[72%] md:w-auto bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-4 md:p-6 text-white relative overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
+              <p className="text-[10px] font-bold uppercase opacity-70">Motorbike · Car · E-Bike</p>
+              <p className="text-lg font-black mt-1">Vehicle Rentals</p>
+              <p className="text-xs opacity-80 mt-0.5">Rent a ride for your trip</p>
               <span className="inline-block mt-3 bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">Browse now</span>
             </a>
           </div>

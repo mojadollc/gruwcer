@@ -646,6 +646,79 @@ model RentalBooking {
   updatedAt        DateTime            @updatedAt
 }
 
+// ─── VEHICLE RENTAL ─────────────────────────────────────────────────────────
+
+enum VehicleType {
+  motorbike
+  car
+  ebike
+}
+
+enum VehicleStatus {
+  pending_approval
+  active
+  rented
+  suspended
+}
+
+model VehicleListing {
+  id            String        @id @default(cuid())
+  ownerId       String
+  ownerName     String
+  ownerPhone    String
+  title         String
+  description   String?
+  vehicleType   String        @default("motorbike") // motorbike | car | e-bike
+  specs         String?
+  features      String[]      @default([])
+  ratePerDay    Float
+  damageDeposit Float         @default(0)
+  minDays       Int           @default(1)
+  maxDays       Int           @default(30)
+  location      String
+  lat           Float?
+  lng           Float?
+  withDriver    Boolean       @default(false)
+  imageUrls     String[]      @default([])
+  ownerIdUrl    String?
+  licenseUrl    String?
+  orCrUrl       String?
+  status        String        @default("pending_approval")
+  idVerified    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  bookings      VehicleBooking[]
+}
+
+model VehicleBooking {
+  id            String   @id @default(cuid())
+  listingId     String
+  listing       VehicleListing @relation(fields: [listingId], references: [id])
+  renterId      String
+  renterName    String
+  renterPhone   String
+  startDate     String
+  endDate       String
+  days          Int
+  ratePerDay    Float
+  subtotal      Float
+  damageDeposit Float    @default(0)
+  platformFee   Float    @default(0)
+  downpayment   Float
+  balanceDue    Float
+  totalAmount   Float
+  paymentMethod String?
+  paymongoId    String?
+  paymongoUrl   String?
+  status        String   @default("pending_payment") // pending_payment | downpayment_paid | active | completed | cancelled | disputed
+  agreedToTerms Boolean  @default(false)
+  returnNotes   String?
+  disputeReason String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 // ─── SUPPORT TICKET ──────────────────────────────────────────────────────────
 
 enum SupportStatus {
