@@ -646,6 +646,57 @@ model RentalBooking {
   updatedAt        DateTime            @updatedAt
 }
 
+// ─── SUPPORT TICKET ──────────────────────────────────────────────────────────
+
+enum SupportStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum SupportCategory {
+  grocery
+  laundry
+  food
+  rentals
+  home_services
+  eload
+  payment
+  account
+  other
+}
+
+model SupportTicket {
+  id            String          @id @default(cuid())
+  customerId    String?
+  customerName  String
+  customerPhone String?
+  customerEmail String?
+  category      SupportCategory @default(other)
+  subject       String
+  message       String
+  status        SupportStatus   @default(open)
+  adminReply    String?
+  repliedAt     DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Suggestion {
+  id           String   @id @default(cuid())
+  customerId   String?
+  customerName String
+  service      String   @default("general") // grocery | laundry | food | rentals | home_services | eload | general
+  title        String
+  description  String
+  upvotes      Int      @default(0)
+  status       String   @default("pending") // pending | noted | planned | implemented
+  adminNote    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 // ─── ELOAD ORDER ──────────────────────────────────────────────────────────────
 
 model EloadOrder {
