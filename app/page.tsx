@@ -27,7 +27,7 @@ const SERVICES = [
   { id: "travel", name: "Hotel & Flights", href: "/travel", available: true, color: "text-purple-600 bg-purple-50" },
   { id: "rentals", name: "Rentals", href: "/rentals", available: true, color: "text-amber-600 bg-amber-50" },
   { id: "healthcare", name: "Clinics", href: "#", available: false, color: "text-red-500 bg-red-50" },
-  { id: "food", name: "Food To Go", href: "#", available: false, color: "text-yellow-600 bg-yellow-50" },
+  { id: "food", name: "Food To Go", href: "/food", available: true, color: "text-yellow-600 bg-yellow-50" },
   { id: "errand", name: "Errands", href: "#", available: false, color: "text-teal-600 bg-teal-50" },
   { id: "bills", name: "Bills", href: "#", available: false, color: "text-indigo-600 bg-indigo-50" },
   { id: "more", name: "More", href: "#", available: false, color: "text-gray-600 bg-gray-100" },
@@ -456,6 +456,13 @@ export default function HomePage() {
               <p className="text-lg font-black mt-1">Home Services</p>
               <p className="text-xs opacity-80 mt-0.5">Aircon, plumbing, electrical</p>
               <span className="inline-block mt-3 bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">Book now</span>
+            </a>
+            <a href="/food" className="flex-shrink-0 w-[72%] md:w-auto bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl p-4 md:p-6 text-white relative overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />
+              <p className="text-[10px] font-bold uppercase opacity-70">Local restaurants</p>
+              <p className="text-lg font-black mt-1">Food to Go</p>
+              <p className="text-xs opacity-80 mt-0.5">Order from nearby restaurants</p>
+              <span className="inline-block mt-3 bg-white/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full">Order now</span>
             </a>
             <a href="/rentals" className="flex-shrink-0 w-[72%] md:w-auto bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 md:p-6 text-white relative overflow-hidden hover:shadow-lg transition-shadow">
               <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/10 rounded-full" />

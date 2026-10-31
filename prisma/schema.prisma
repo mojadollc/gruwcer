@@ -486,6 +486,94 @@ model PlatformPromo {
   updatedAt       DateTime @updatedAt
 }
 
+// ─── FOOD RESTAURANT ────────────────────────────────────────────────────────
+
+enum FoodOrderStatus {
+  pending
+  confirmed
+  preparing
+  ready_for_pickup
+  out_for_delivery
+  delivered
+  cancelled
+  rejected
+}
+
+model FoodRestaurant {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  logoUrl       String?
+  coverUrl      String?
+  cuisine       String   @default("Filipino")
+  address       String
+  lat           Float?
+  lng           Float?
+  openTime      String   @default("08:00")
+  closeTime     String   @default("22:00")
+  deliveryFee   Float    @default(49)
+  minOrder      Float    @default(100)
+  estimatedTime String   @default("20-35 min")
+  rating        Float    @default(0)
+  ratingCount   Int      @default(0)
+  isOpen        Boolean  @default(true)
+  featured      Boolean  @default(false)
+  commissionPct Float    @default(10)
+  ownerId       String?
+  ownerName     String?
+  ownerPhone    String?
+  status        String   @default("pending") // pending | active | suspended
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  menuItems     FoodMenuItem[]
+  orders        FoodOrder[]
+}
+
+model FoodMenuItem {
+  id           String          @id @default(cuid())
+  restaurantId String
+  restaurant   FoodRestaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  price        Float
+  imageUrl     String?
+  category     String          @default("Main")
+  available    Boolean         @default(true)
+  featured     Boolean         @default(false)
+  spicy        Boolean         @default(false)
+  vegetarian   Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model FoodOrder {
+  id              String          @id @default(cuid())
+  restaurantId    String
+  restaurant      FoodRestaurant  @relation(fields: [restaurantId], references: [id])
+  restaurantName  String
+  customerId      String?
+  customerName    String
+  customerPhone   String
+  deliveryAddress String
+  deliveryLat     Float?
+  deliveryLng     Float?
+  items           Json            // [{id, name, price, quantity, imageUrl}]
+  subtotal        Float
+  deliveryFee     Float
+  platformFee     Float           @default(0)
+  total           Float
+  notes           String?
+  paymentMethod   String          @default("cod")
+  paymentStatus   PaymentStatus   @default(unpaid)
+  status          FoodOrderStatus @default(pending)
+  driverId        String?
+  driverName      String?
+  estimatedTime   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
 // ─── RENTAL LISTING ─────────────────────────────────────────────────────────
 
 enum RentalStatus {
