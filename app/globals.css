@@ -32,13 +32,6 @@ body {
   user-select: none;
 }
 
-@media (min-width: 768px) {
-  body {
-    background: transparent;
-    overscroll-behavior: none;
-  }
-}
-
 /* Allow text selection in inputs/textareas */
 input, textarea, [contenteditable] {
   -webkit-user-select: auto;
