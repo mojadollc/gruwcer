@@ -48,8 +48,10 @@ export default function PostVehiclePage() {
     const files = Array.from(e.target.files || []).slice(0, 6 - images.length)
     if (!files.length) return
     setUploadingImg(true)
-    try { setImages(prev => [...prev, ...await Promise.all(files.map(uploadFile))].slice(0, 6)) }
-    finally { setUploadingImg(false) }
+    try {
+      const urls = await Promise.all(files.map(uploadFile))
+      setImages(prev => [...prev, ...urls].slice(0, 6))
+    } finally { setUploadingImg(false) }
   }
 
   const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>, setter: (u: string) => void, setLoading: (v: boolean) => void) => {
