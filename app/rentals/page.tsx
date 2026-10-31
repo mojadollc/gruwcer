@@ -90,7 +90,7 @@ export default function RentalsPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
             </a>
             <div>
-              <h1 className="font-black text-base">🔧 Tool & Equipment Rental</h1>
+              <h1 className="font-black text-base">🔧 Tools & Equipment Rentals</h1>
               <p className="text-white/60 text-[10px]">Rent from your neighbors</p>
             </div>
           </div>
