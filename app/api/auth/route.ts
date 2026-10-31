@@ -10,6 +10,18 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { action, email, password, name, phone, role, shopName, address, landmark, lat, lng, skills, partnerType } = body
 
+    if (action === "reset-password") {
+      const { phone: resetPhone, newPassword } = body
+      if (!resetPhone || !newPassword) return NextResponse.json({ error: "Phone and new password required" }, { status: 400 })
+      if (newPassword.length < 6) return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 })
+      const user = await prisma.user.findFirst({ where: { phone: resetPhone } })
+      if (!user) return NextResponse.json({ error: "No account found with this phone number" }, { status: 404 })
+      const passwordHash = await bcrypt.hash(newPassword, 10)
+      await prisma.user.update({ where: { id: user.id }, data: { passwordHash } })
+      const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: "30d" })
+      return NextResponse.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status } })
+    }
+
     if (action === "login") {
       if (!email || !password) return NextResponse.json({ error: "Email and password required" }, { status: 400 })
       const user = await prisma.user.findFirst({ where: { email } })

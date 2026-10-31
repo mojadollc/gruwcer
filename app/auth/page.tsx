@@ -21,6 +21,17 @@ function AuthPage() {
   const recaptchaContainerRef = useRef<HTMLDivElement>(null)
   const firebaseAuthRef = useRef<any>(null)
 
+  // Forgot password state
+  const [forgotMode, setForgotMode] = useState(false)
+  const [forgotPhone, setForgotPhone] = useState("")
+  const [forgotOtp, setForgotOtp] = useState("")
+  const [forgotOtpSent, setForgotOtpSent] = useState(false)
+  const [forgotConfirmation, setForgotConfirmation] = useState<ConfirmationResult | null>(null)
+  const [forgotVerified, setForgotVerified] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showNewPw, setShowNewPw] = useState(false)
+
   const getFirebaseAuth = async () => {
     if (firebaseAuthRef.current) return firebaseAuthRef.current
     const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
@@ -94,6 +105,56 @@ function AuthPage() {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || "Authentication failed")
     return data
+  }
+
+  const handleForgotSendOtp = async () => {
+    setError(""); setLoading(true)
+    try {
+      const auth = await getFirebaseAuth()
+      if (!auth) { setError("Phone OTP not available — Firebase not configured"); return }
+      const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth")
+      if (!recaptchaRef.current) {
+        recaptchaRef.current = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" })
+      }
+      const formatted = forgotPhone.startsWith("+") ? forgotPhone : `+63${forgotPhone.replace(/^0/, "")}`
+      const result = await signInWithPhoneNumber(auth, formatted, recaptchaRef.current)
+      setForgotConfirmation(result)
+      setForgotOtpSent(true)
+    } catch (e: any) {
+      recaptchaRef.current = null
+      setError(e.message || "Failed to send OTP")
+    } finally { setLoading(false) }
+  }
+
+  const handleForgotVerifyOtp = async () => {
+    if (!forgotConfirmation) return
+    setError(""); setLoading(true)
+    try {
+      await forgotConfirmation.confirm(forgotOtp)
+      setForgotVerified(true)
+    } catch (e: any) {
+      setError("Invalid OTP. Please try again.")
+    } finally { setLoading(false) }
+  }
+
+  const handleResetPassword = async () => {
+    setError("")
+    if (newPassword.length < 6) { setError("Password must be at least 6 characters"); return }
+    if (newPassword !== confirmPassword) { setError("Passwords do not match"); return }
+    setLoading(true)
+    try {
+      const formatted = forgotPhone.startsWith("+") ? forgotPhone : `+63${forgotPhone.replace(/^0/, "")}`
+      const data = await callAuth({ action: "reset-password", phone: formatted, newPassword })
+      setAuth(data.token, data.user)
+      setSuccess("Password reset successfully! Redirecting...")
+      setTimeout(() => { window.location.href = data.user.role === "partner" ? "/partner" : data.user.role === "driver" ? "/driver" : "/" }, 1500)
+    } catch (e: any) { setError(e.message) } finally { setLoading(false) }
+  }
+
+  const resetForgotState = () => {
+    setForgotMode(false); setForgotPhone(""); setForgotOtp(""); setForgotOtpSent(false)
+    setForgotConfirmation(null); setForgotVerified(false); setNewPassword(""); setConfirmPassword("")
+    setError(""); recaptchaRef.current = null
   }
 
   const handlePartnerRegister = async () => {
@@ -214,25 +275,56 @@ function AuthPage() {
             </>
           ) : tab === "rider" ? (
             <>
-              <h2 className="font-bold text-lg text-gray-800 mb-1">Rider Registration</h2>
-              <p className="text-xs text-gray-400 mb-4">Register as a delivery rider</p>
-              {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg mb-3">{error}</div>}
-              <div className="space-y-3">
-                <input placeholder="Full Name" value={riderForm.name} onChange={(e) => setRiderForm({ ...riderForm, name: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
-                <input placeholder="Phone Number" value={riderForm.phone} onChange={(e) => setRiderForm({ ...riderForm, phone: e.target.value.replace(/[^0-9]/g, "") })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
-                <input type="email" placeholder="Email" value={riderForm.email} onChange={(e) => setRiderForm({ ...riderForm, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
-                <input type="password" placeholder="Password" value={riderForm.password} onChange={(e) => setRiderForm({ ...riderForm, password: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
-                <button onClick={handleRiderRegister} disabled={loading || !riderForm.email || !riderForm.password}
-                  className="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
-                  {loading ? "Registering..." : "Register as Rider"}
-                </button>
-              </div>
+              {forgotMode ? (
+                <ForgotPasswordFlow
+                  forgotPhone={forgotPhone} setForgotPhone={setForgotPhone}
+                  forgotOtp={forgotOtp} setForgotOtp={setForgotOtp}
+                  forgotOtpSent={forgotOtpSent} forgotVerified={forgotVerified}
+                  newPassword={newPassword} setNewPassword={setNewPassword}
+                  confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword}
+                  showNewPw={showNewPw} setShowNewPw={setShowNewPw}
+                  loading={loading} error={error}
+                  onSendOtp={handleForgotSendOtp} onVerifyOtp={handleForgotVerifyOtp}
+                  onReset={handleResetPassword} onBack={resetForgotState}
+                />
+              ) : (
+                <>
+                  <h2 className="font-bold text-lg text-gray-800 mb-1">Rider Registration</h2>
+                  <p className="text-xs text-gray-400 mb-4">Register as a delivery rider</p>
+                  {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg mb-3">{error}</div>}
+                  <div className="space-y-3">
+                    <input placeholder="Full Name" value={riderForm.name} onChange={(e) => setRiderForm({ ...riderForm, name: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
+                    <input placeholder="Phone Number" value={riderForm.phone} onChange={(e) => setRiderForm({ ...riderForm, phone: e.target.value.replace(/[^0-9]/g, "") })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
+                    <input type="email" placeholder="Email" value={riderForm.email} onChange={(e) => setRiderForm({ ...riderForm, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
+                    <input type="password" placeholder="Password" value={riderForm.password} onChange={(e) => setRiderForm({ ...riderForm, password: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-green-600" />
+                    <button onClick={handleRiderRegister} disabled={loading || !riderForm.email || !riderForm.password}
+                      className="w-full bg-green-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+                      {loading ? "Registering..." : "Register as Rider"}
+                    </button>
+                    <button onClick={() => { setForgotMode(true); setError("") }} className="w-full text-xs text-gray-400 hover:text-[#16A34A] transition-colors pt-1">
+                      Forgot password? Reset via phone OTP
+                    </button>
+                  </div>
+                </>
+              )}
             </>
           ) : (
             <>
               <h2 className="font-bold text-lg text-gray-800 mb-1">Partner Registration</h2>
 
-              {!partnerType ? (
+              {forgotMode ? (
+                <ForgotPasswordFlow
+                  forgotPhone={forgotPhone} setForgotPhone={setForgotPhone}
+                  forgotOtp={forgotOtp} setForgotOtp={setForgotOtp}
+                  forgotOtpSent={forgotOtpSent} forgotVerified={forgotVerified}
+                  newPassword={newPassword} setNewPassword={setNewPassword}
+                  confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword}
+                  showNewPw={showNewPw} setShowNewPw={setShowNewPw}
+                  loading={loading} error={error}
+                  onSendOtp={handleForgotSendOtp} onVerifyOtp={handleForgotVerifyOtp}
+                  onReset={handleResetPassword} onBack={resetForgotState}
+                />
+              ) : !partnerType ? (
                 <>
                   <p className="text-xs text-gray-400 mb-4">Choose the service you want to offer</p>
                   {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg mb-3">{error}</div>}
@@ -323,6 +415,9 @@ function AuthPage() {
                       className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
                       {loading ? "Registering..." : "Register as Partner"}
                     </button>
+                    <button onClick={() => { setForgotMode(true); setError("") }} className="w-full text-xs text-gray-400 hover:text-blue-600 transition-colors pt-1">
+                      Forgot password? Reset via phone OTP
+                    </button>
                   </div>
                 </>
               )}
@@ -334,6 +429,141 @@ function AuthPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+function ForgotPasswordFlow({
+  forgotPhone, setForgotPhone, forgotOtp, setForgotOtp,
+  forgotOtpSent, forgotVerified,
+  newPassword, setNewPassword, confirmPassword, setConfirmPassword,
+  showNewPw, setShowNewPw,
+  loading, error,
+  onSendOtp, onVerifyOtp, onReset, onBack,
+}: {
+  forgotPhone: string; setForgotPhone: (v: string) => void
+  forgotOtp: string; setForgotOtp: (v: string) => void
+  forgotOtpSent: boolean; forgotVerified: boolean
+  newPassword: string; setNewPassword: (v: string) => void
+  confirmPassword: string; setConfirmPassword: (v: string) => void
+  showNewPw: boolean; setShowNewPw: (v: boolean) => void
+  loading: boolean; error: string
+  onSendOtp: () => void; onVerifyOtp: () => void; onReset: () => void; onBack: () => void
+}) {
+  return (
+    <div className="space-y-4">
+      <button onClick={onBack} className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 font-medium">
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+        Back to login
+      </button>
+
+      {/* Step indicators */}
+      <div className="flex items-center gap-2 mb-2">
+        {["Phone", "Verify OTP", "New Password"].map((s, i) => {
+          const done = (i === 0 && forgotOtpSent) || (i === 1 && forgotVerified) || (i === 2 && false)
+          const active = (!forgotOtpSent && i === 0) || (forgotOtpSent && !forgotVerified && i === 1) || (forgotVerified && i === 2)
+          return (
+            <div key={s} className="flex items-center gap-1 flex-1">
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                done ? "bg-green-500 text-white" : active ? "bg-[#16A34A] text-white" : "bg-gray-100 text-gray-400"
+              }`}>
+                {done ? "✓" : i + 1}
+              </div>
+              <span className={`text-[10px] font-medium ${active ? "text-gray-800" : "text-gray-400"}`}>{s}</span>
+              {i < 2 && <div className="flex-1 h-px bg-gray-200 mx-1" />}
+            </div>
+          )
+        })}
+      </div>
+
+      {error && <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs px-3 py-2 rounded-lg">{error}</div>}
+
+      {/* Step 1: Enter phone */}
+      {!forgotOtpSent && (
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-bold text-gray-800 mb-1">Reset Password</p>
+            <p className="text-xs text-gray-400">Enter the phone number linked to your account</p>
+          </div>
+          <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:border-[#16A34A]">
+            <span className="px-3 text-sm text-gray-500 bg-gray-50 border-r border-gray-200 py-2.5">🇵🇭 +63</span>
+            <input
+              placeholder="9XX XXX XXXX"
+              value={forgotPhone}
+              onChange={e => setForgotPhone(e.target.value.replace(/[^0-9]/g, ""))}
+              maxLength={10}
+              className="flex-1 px-3 py-2.5 text-sm outline-none"
+            />
+          </div>
+          <button onClick={onSendOtp} disabled={loading || forgotPhone.length < 10}
+            className="w-full bg-[#16A34A] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+            {loading ? "Sending OTP..." : "Send OTP"}
+          </button>
+        </div>
+      )}
+
+      {/* Step 2: Verify OTP */}
+      {forgotOtpSent && !forgotVerified && (
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-bold text-gray-800 mb-1">Enter OTP</p>
+            <p className="text-xs text-gray-400">Sent to <span className="font-bold text-gray-700">+63{forgotPhone}</span></p>
+          </div>
+          <input
+            placeholder="Enter 6-digit OTP"
+            value={forgotOtp}
+            onChange={e => setForgotOtp(e.target.value.replace(/[^0-9]/g, ""))}
+            maxLength={6}
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#16A34A] tracking-[0.4em] text-center text-xl font-black"
+          />
+          <button onClick={onVerifyOtp} disabled={loading || forgotOtp.length < 6}
+            className="w-full bg-[#16A34A] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+            {loading ? "Verifying..." : "Verify OTP"}
+          </button>
+          <button onClick={onBack} className="w-full text-xs text-gray-400 hover:text-gray-600">
+            ← Change number
+          </button>
+        </div>
+      )}
+
+      {/* Step 3: New password */}
+      {forgotVerified && (
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-bold text-gray-800 mb-1">Set New Password</p>
+            <p className="text-xs text-gray-400">Phone verified ✓ — choose a new password</p>
+          </div>
+          <div className="relative">
+            <input
+              type={showNewPw ? "text" : "password"}
+              placeholder="New password (min 6 chars)"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm outline-none focus:border-[#16A34A]"
+            />
+            <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              {showNewPw
+                ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              }
+            </button>
+          </div>
+          <input
+            type={showNewPw ? "text" : "password"}
+            placeholder="Confirm new password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#16A34A]"
+          />
+          {newPassword && confirmPassword && newPassword !== confirmPassword && (
+            <p className="text-xs text-red-500">Passwords do not match</p>
+          )}
+          <button onClick={onReset} disabled={loading || newPassword.length < 6 || newPassword !== confirmPassword}
+            className="w-full bg-[#16A34A] text-white py-3 rounded-xl font-bold text-sm disabled:opacity-40">
+            {loading ? "Resetting..." : "Reset Password"}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
