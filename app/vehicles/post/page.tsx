@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { getUser } from "@/lib/auth"
 
 const VEHICLE_TYPES = ["motorbike", "car", "e-bike"]
@@ -12,7 +13,9 @@ const FEATURES_BY_TYPE: Record<string, string[]> = {
 }
 
 export default function PostVehiclePage() {
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
+  const [authChecked, setAuthChecked] = useState(false)
   const [form, setForm] = useState({
     title: "", description: "", vehicleType: "motorbike",
     specs: "", ratePerDay: "", damageDeposit: "", minDays: "1", maxDays: "30",
@@ -33,10 +36,11 @@ export default function PostVehiclePage() {
 
   useEffect(() => {
     const u = getUser() as any
-    if (!u) { window.location.href = "/auth?redirect=/vehicles/post"; return }
+    if (!u) { router.replace("/auth?redirect=/vehicles/post"); return }
     setUser(u)
+    setAuthChecked(true)
     fetch(`/api/vehicles?ownerId=${u.id}&status=all`).then(r => r.ok ? r.json() : []).then(setMyListings)
-  }, [])
+  }, [router])
 
   const uploadFile = async (file: File) => {
     const fd = new FormData(); fd.append("file", file)
@@ -101,6 +105,12 @@ export default function PostVehiclePage() {
     rented: "bg-blue-100 text-blue-700",
     suspended: "bg-red-100 text-red-600",
   }
+
+  if (!authChecked) return (
+    <main className="min-h-screen bg-[#F4F5F7] flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-[#1a56db] border-t-transparent rounded-full animate-spin" />
+    </main>
+  )
 
   if (done) return (
     <main className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-4">

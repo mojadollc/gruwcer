@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { getUser, getToken } from "@/lib/auth"
 
 const CATEGORIES = ["tools", "equipment", "electronics", "sports", "other"]
 
 export default function PostRentalPage() {
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
+  const [authChecked, setAuthChecked] = useState(false)
   const [form, setForm] = useState({
     title: "", description: "", category: "tools",
     ratePerDay: "", damageDeposit: "", minDays: "1", maxDays: "30", location: "",
@@ -21,10 +24,11 @@ export default function PostRentalPage() {
 
   useEffect(() => {
     const u = getUser()
-    if (!u) { window.location.href = "/auth?redirect=/rentals/post"; return }
+    if (!u) { router.replace("/auth?redirect=/rentals/post"); return }
     setUser(u)
+    setAuthChecked(true)
     fetch(`/api/rentals?ownerId=${u.id}&status=all`).then(r => r.ok ? r.json() : []).then(setMyListings)
-  }, [])
+  }, [router])
 
   const uploadFile = async (file: File, type: "image" | "id") => {
     const fd = new FormData(); fd.append("file", file)
@@ -85,6 +89,12 @@ export default function PostRentalPage() {
     rented: "bg-blue-100 text-blue-700",
     suspended: "bg-red-100 text-red-600",
   }
+
+  if (!authChecked) return (
+    <main className="min-h-screen bg-[#F4F5F7] flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-[#16A34A] border-t-transparent rounded-full animate-spin" />
+    </main>
+  )
 
   if (done) return (
     <main className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-4">
