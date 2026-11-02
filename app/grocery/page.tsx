@@ -203,22 +203,59 @@ export default function Home() {
     if (userAddress && !checkoutForm.address) setCheckoutForm((prev) => ({ ...prev, address: userAddress, lat: userLat, lng: userLng }))
   }, [userAddress])
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/pos-products")
-        let data: any = []
-        try { data = await res.json() } catch {}
-        const prods: any[] = Array.isArray(data) ? data : []
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "updated">("idle")
+  const [lastSynced, setLastSynced] = useState<Date | null>(null)
+
+  const loadProducts = async (silent = false) => {
+    if (!silent) setLoading(true)
+    else setSyncStatus("syncing")
+    try {
+      const res = await fetch("/api/pos-products", { cache: "no-store" })
+      let data: any = []
+      try { data = await res.json() } catch {}
+      const prods: any[] = Array.isArray(data) ? data : []
+      if (!silent) {
         for (let i = prods.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[prods[i], prods[j]] = [prods[j], prods[i]] }
-        setProducts(prods)
-        const cats = [...new Set(prods.map((p: any) => p.category).filter(Boolean))]
-        setCategories(cats as any)
-        setStoreCategories((cats as string[]).map((name: string) => ({ id: name, name })))
-      } catch (e) { console.error("Failed to load products:", e) }
-      finally { setLoading(false) }
-    }
-    load()
+      }
+      setProducts(prev => {
+        if (!silent) return prods
+        // merge: detect changes
+        const prevMap = new Map(prev.map((p: any) => [p.id, p]))
+        const nextMap = new Map(prods.map((p: any) => [p.id, p]))
+        let changed = prev.length !== prods.length
+        if (!changed) {
+          for (const [id, p] of nextMap) {
+            const old = prevMap.get(id)
+            if (!old || old.price !== p.price || old.stock !== p.stock || old.name !== p.name || old.salePrice !== p.salePrice || old.onSale !== p.onSale) { changed = true; break }
+          }
+        }
+        if (!changed) return prev
+        // preserve order of existing products, append new ones at end
+        const merged = prev.map((p: any) => nextMap.get(p.id) || p).filter((p: any) => nextMap.has(p.id))
+        prods.forEach((p: any) => { if (!prevMap.has(p.id)) merged.push(p) })
+        setSyncStatus("updated")
+        setTimeout(() => setSyncStatus("idle"), 3000)
+        return merged
+      })
+      const cats = [...new Set(prods.map((p: any) => p.category).filter(Boolean))]
+      setCategories(cats as any)
+      setStoreCategories((cats as string[]).map((name: string) => ({ id: name, name })))
+      setLastSynced(new Date())
+    } catch (e) { console.error("Failed to load products:", e) }
+    finally { if (!silent) setLoading(false) }
+  }
+
+  useEffect(() => { loadProducts(false) }, [])
+
+  useEffect(() => {
+    const iv = setInterval(() => loadProducts(true), 60_000)
+    return () => clearInterval(iv)
+  }, [])
+
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === "visible") loadProducts(true) }
+    document.addEventListener("visibilitychange", onVisible)
+    return () => document.removeEventListener("visibilitychange", onVisible)
   }, [])
 
   const filtered = Array.isArray(products) ? products.filter((p) => {
@@ -605,6 +642,17 @@ export default function Home() {
           <a href="/account" className="flex flex-col items-center gap-0.5 py-1 text-gray-400"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg><span className="text-[10px]">Account</span></a>
         </div>
       </nav>
+
+      {/* SYNC STATUS TOAST */}
+      {syncStatus !== "idle" && (
+        <div className={`fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-2 px-4 py-2.5 rounded-full shadow-lg text-white text-xs font-bold transition-all ${
+          syncStatus === "updated" ? "bg-[#16A34A]" : "bg-gray-700"
+        }`}>
+          {syncStatus === "syncing"
+            ? <><svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-30"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>Checking for updates...</>
+            : <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>Products updated!</>}
+        </div>
+      )}
 
       {/* POPUP BANNER */}
       {showPopup && popupBanners.length > 0 && popupBanners[0].imageUrl && (

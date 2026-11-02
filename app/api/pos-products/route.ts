@@ -12,7 +12,8 @@ function fixImageUrl(url: string | null | undefined): string {
 export async function GET() {
   try {
     const res = await fetch(`${POS_BASE}/api/products?storeId=${STORE_ID}`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 0 },
+      cache: "no-store",
     })
     if (!res.ok) throw new Error(`POS API error: ${res.status}`)
     const json = await res.json()
