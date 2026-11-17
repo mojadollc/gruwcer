@@ -43,20 +43,26 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     async function load() {
-      const [data, pm, allPartners, env] = await Promise.all([
-        fetch("/api/delivery-settings").then(r => r.json()),
-        fetch("/api/settings/payment-methods").then(r => r.ok ? r.json() : {}).catch(() => ({})),
-        fetch("/api/users?role=partner").then(r => r.json()),
-        fetch("/api/admin/env").then(r => r.json()).catch(() => ({})),
-      ])
-      setEnvVars(env)
-      setSettings({ ...DEFAULT_SETTINGS, ...data })
-      setPaymentMethods((prev: any) => ({ ...prev, ...pm }))
-      setPartners(allPartners.filter((p: any) => p.status === "active" || p.status === "pending"))
-      const overrides: Record<string, { mode: string; min: number }> = {}
-      allPartners.forEach((p: any) => { overrides[p.id] = { mode: p.listingMode || "free", min: p.minimumBalance ?? 0 } })
-      setPartnerOverrides(overrides)
-      setLoading(false)
+      try {
+        const [data, pm, allPartners, env] = await Promise.all([
+          fetch("/api/delivery-settings").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+          fetch("/api/settings/payment-methods").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+          fetch("/api/users?role=partner").then(r => r.ok ? r.json() : []).catch(() => []),
+          fetch("/api/admin/env").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+        ])
+        setEnvVars(env || {})
+        setSettings((prev: any) => ({ ...prev, ...data }))
+        setPaymentMethods((prev: any) => ({ ...prev, ...pm }))
+        const partners = Array.isArray(allPartners) ? allPartners : []
+        setPartners(partners.filter((p: any) => p.status === "active" || p.status === "pending"))
+        const overrides: Record<string, { mode: string; min: number }> = {}
+        partners.forEach((p: any) => { overrides[p.id] = { mode: p.listingMode || "free", min: p.minimumBalance ?? 0 } })
+        setPartnerOverrides(overrides)
+      } catch (e) {
+        console.error("Settings load error:", e)
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
