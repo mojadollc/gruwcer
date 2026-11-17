@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
+import ImageUpload from "../components/ImageUpload"
 
 type AdminTab = "restaurants" | "orders" | "menu"
 
@@ -360,12 +361,14 @@ export default function AdminFoodPage() {
                   </div>
                 ))}
               </div>
-              {[{label:"Logo URL",key:"logoUrl"},{label:"Cover Image URL",key:"coverUrl"}].map(f=>(
-                <div key={f.key}>
-                  <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{f.label}</label>
-                  <input value={(rForm as any)[f.key]} onChange={e=>setRForm(x=>({...x,[f.key]:e.target.value}))} placeholder="https://..." className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm mt-1 outline-none focus:border-orange-400"/>
-                </div>
-              ))}
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Logo Image</label>
+                <div className="mt-1"><ImageUpload folder="food/logos" value={rForm.logoUrl} onChange={url=>setRForm(x=>({...x,logoUrl:url}))}/></div>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Cover Image</label>
+                <div className="mt-1"><ImageUpload folder="food/covers" value={rForm.coverUrl} onChange={url=>setRForm(x=>({...x,coverUrl:url}))}/></div>
+              </div>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={rForm.isOpen} onChange={e=>setRForm(x=>({...x,isOpen:e.target.checked}))} className="accent-orange-500 w-4 h-4"/><span className="text-sm font-medium">Currently Open</span></label>
                 <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={rForm.featured} onChange={e=>setRForm(x=>({...x,featured:e.target.checked}))} className="accent-orange-500 w-4 h-4"/><span className="text-sm font-medium">Featured</span></label>
@@ -390,12 +393,16 @@ export default function AdminFoodPage() {
               <button onClick={()=>setShowMenuForm(false)} className="text-white/70 text-2xl">&times;</button>
             </div>
             <div className="overflow-y-auto flex-1 p-5 space-y-3">
-              {[{label:"Item Name *",key:"name",placeholder:"e.g. Chicken Joy"},{label:"Description",key:"description",placeholder:"What's in it?"},{label:"Category",key:"category",placeholder:"e.g. Main, Sides, Drinks"},{label:"Image URL",key:"imageUrl",placeholder:"https://..."}].map(f=>(
+              {[{label:"Item Name *",key:"name",placeholder:"e.g. Chicken Joy"},{label:"Description",key:"description",placeholder:"What's in it?"},{label:"Category",key:"category",placeholder:"e.g. Main, Sides, Drinks"}].map(f=>(
                 <div key={f.key}>
                   <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{f.label}</label>
                   <input value={(mForm as any)[f.key]} onChange={e=>setMForm(x=>({...x,[f.key]:e.target.value}))} placeholder={f.placeholder} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm mt-1 outline-none focus:border-orange-400"/>
                 </div>
               ))}
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Item Image</label>
+                <div className="mt-1"><ImageUpload folder="food/menu" value={mForm.imageUrl} onChange={url=>setMForm(x=>({...x,imageUrl:url}))}/></div>
+              </div>
               <div>
                 <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Price (₱) *</label>
                 <div className="relative mt-1">

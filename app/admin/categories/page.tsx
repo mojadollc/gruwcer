@@ -35,17 +35,25 @@ export default function AdminCategories() {
     load()
   }
 
-  const handleImageUpload = async (catId: string, file: File) => {
+  const handleImageUpload = async (catName: string, file: File) => {
     setUploading(true)
     try {
       const fd = new FormData()
       fd.append("file", file)
       fd.append("folder", "categories")
-      const res2 = await fetch("/api/upload", { method: "POST", body: fd })
-      const data = await res2.json()
-      // update all products in this category with new imageUrl
-      console.log("Category image uploaded:", data.url)
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!data.url) throw new Error(data.error || "Upload failed")
+      // Patch all products in this category with the new imageUrl via a bulk update
+      await fetch("/api/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryImageUrl: data.url, category: catName }),
+      }).catch(() => {})
+      alert(`Image uploaded: ${data.url}`)
       load()
+    } catch (e: any) {
+      alert(e.message || "Upload failed")
     } finally {
       setUploading(false)
     }
@@ -98,8 +106,8 @@ export default function AdminCategories() {
               <div className="flex gap-2">
                 <button onClick={() => handleEdit(cat)} className="flex-1 text-xs bg-blue-50 text-blue-600 py-1.5 rounded-lg font-medium">Edit</button>
                 <label className="flex-1 text-xs bg-green-50 text-green-600 py-1.5 rounded-lg font-medium text-center cursor-pointer">
-                  {uploading ? "..." : "Image"}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(cat.id, e.target.files[0]) }} />
+                  {uploading ? "Uploading..." : "📷 Image"}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(cat.name, e.target.files[0]) }} />
                 </label>
                 <button onClick={() => handleDelete(cat.id)} className="text-xs bg-green-50 text-green-700 py-1.5 px-3 rounded-lg font-medium">✕</button>
               </div>

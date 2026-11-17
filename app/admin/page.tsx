@@ -79,14 +79,17 @@ export default function AdminProducts() {
     if (!editing) return
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("productId", editing.id)
-      const res = await fetch("/api/upload/product-image", { method: "POST", body: formData })
-      const { url } = await res.json()
-      await fetch(`/api/products/${editing.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ imageUrl: url }) })
-      setProducts((prev) => prev.map((p) => p.id === editing.id ? { ...p, imageUrl: url } : p))
-      setEditing({ ...editing, imageUrl: url })
+      const fd = new FormData()
+      fd.append("file", file)
+      fd.append("folder", "products")
+      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!data.url) throw new Error(data.error || "Upload failed")
+      await fetch(`/api/products/${editing.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ imageUrl: data.url }) })
+      setProducts((prev) => prev.map((p) => p.id === editing.id ? { ...p, imageUrl: data.url } : p))
+      setEditing({ ...editing, imageUrl: data.url })
+    } catch (e: any) {
+      alert(e.message || "Upload failed")
     } finally {
       setUploading(false)
     }
