@@ -25,6 +25,7 @@ export default function Home() {
   const [authLoading, setAuthLoading] = useState(false)
   const [showCart, setShowCart] = useState(false)
   const [showCheckout, setShowCheckout] = useState(false)
+  const [qrModal, setQrModal] = useState<{ orderId: string; qrCode: string; intentId: string; clientKey: string; amount: number } | null>(null)
   const [checkoutForm, setCheckoutForm] = useState({ name: "", phone: "", address: "", landmark: "", notes: "", lat: 0, lng: 0, paymentMethod: "cod" })
   const [submitting, setSubmitting] = useState(false)
   const [locating, setLocating] = useState(false)
@@ -181,10 +182,20 @@ export default function Home() {
         setWalletBalance((prev: number) => prev - (cartTotal + cartDeposit + deliveryFee))
         window.location.href = `/order?id=${orderId}`; return
       }
-      if (["qrph", "ewallet", "bank"].includes(checkoutForm.paymentMethod)) {
+      if (checkoutForm.paymentMethod === "qrph") {
+        const total = cartTotal + cartDeposit + deliveryFee
+        const res2 = await fetch("/api/paymongo/qrph", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId, amount: total, description: `Grocery #${orderId.slice(-6).toUpperCase()}` }) })
+        const qrData = await res2.json()
+        if (qrData.qrCode) {
+          setCart([]); setShowCheckout(false); setShowCart(false)
+          setQrModal({ orderId, qrCode: qrData.qrCode, intentId: qrData.intentId, clientKey: qrData.clientKey, amount: total })
+          return
+        }
+      }
+      if (["ewallet", "bank"].includes(checkoutForm.paymentMethod)) {
         const { createXenditPayment } = await import("@/lib/xendit")
         const total = cartTotal + cartDeposit + deliveryFee
-        const pms = checkoutForm.paymentMethod === "qrph" ? ["QRPH"] : checkoutForm.paymentMethod === "ewallet" ? ["GRABPAY", "MAYA", "SHOPEEPAY"] : ["DD_BPI", "DD_UBP", "DD_RCBC"]
+        const pms = checkoutForm.paymentMethod === "ewallet" ? ["GRABPAY", "MAYA", "SHOPEEPAY"] : ["DD_BPI", "DD_UBP", "DD_RCBC"]
         const payment = await createXenditPayment({ amount: total, description: `Grocery #${orderId.slice(-6).toUpperCase()}`, externalId: `order_${orderId}`, paymentMethods: pms, successRedirectUrl: `${window.location.origin}/order?id=${orderId}`, failureRedirectUrl: `${window.location.origin}/payment/failed?id=${orderId}&service=grocery` })
         if (payment?.invoiceUrl) { window.location.href = payment.invoiceUrl; return }
       }
@@ -658,6 +669,19 @@ export default function Home() {
       {showPopup && popupBanners.length > 0 && popupBanners[0].imageUrl && (
         <PopupModal banner={popupBanners[0]} onClose={() => setShowPopup(false)} />
       )}
+
+      {/* QR PH PAYMENT MODAL */}
+      {qrModal && (
+        <QrPaymentModal
+          orderId={qrModal.orderId}
+          qrCode={qrModal.qrCode}
+          intentId={qrModal.intentId}
+          clientKey={qrModal.clientKey}
+          amount={qrModal.amount}
+          onClose={() => setQrModal(null)}
+          onPaid={() => { setQrModal(null); window.location.href = `/order?id=${qrModal.orderId}` }}
+        />
+      )}
     </main>
   )
 }
@@ -834,6 +858,126 @@ function PopupModal({ banner, onClose }: { banner: any; onClose: () => void }) {
       <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} style={{ position: "absolute", top: "-44px", left: "50%", transform: "translateX(-50%)", width: 36, height: 36, background: "transparent", border: "2px solid #fff", borderRadius: "50%", color: "#fff", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>✕</button>
         {banner.linkUrl ? <a href={banner.linkUrl} onClick={onClose}><img src={banner.imageUrl} alt="Promo" style={{ maxWidth: "min(380px, 90vw)", maxHeight: "75vh", display: "block" }} /></a> : <img src={banner.imageUrl} alt="Promo" style={{ maxWidth: "min(380px, 90vw)", maxHeight: "75vh", display: "block" }} />}
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+function QrPaymentModal({ orderId, qrCode, intentId, clientKey, amount, onClose, onPaid }: {
+  orderId: string
+  qrCode: string
+  intentId: string
+  clientKey: string
+  amount: number
+  onClose: () => void
+  onPaid: () => void
+}) {
+  const [status, setStatus] = useState<"waiting" | "paid" | "expired">("waiting")
+  const [secondsLeft, setSecondsLeft] = useState(600) // 10 min QR validity
+
+  // Poll payment status every 4s
+  useEffect(() => {
+    const iv = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/paymongo/qrph?intentId=${intentId}&clientKey=${encodeURIComponent(clientKey)}`)
+        const data = await res.json()
+        if (data.status === "succeeded") { clearInterval(iv); setStatus("paid"); setTimeout(onPaid, 1500) }
+      } catch {}
+    }, 4000)
+    return () => clearInterval(iv)
+  }, [intentId, clientKey, onPaid])
+
+  // Countdown timer
+  useEffect(() => {
+    if (status !== "waiting") return
+    const iv = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) { clearInterval(iv); setStatus("expired"); return 0 }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(iv)
+  }, [status])
+
+  const mins = Math.floor(secondsLeft / 60)
+  const secs = secondsLeft % 60
+
+  return createPortal(
+    <div style={{ position: "fixed", inset: 0, zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", padding: "1rem" }}>
+      <div style={{ background: "#fff", borderRadius: 24, width: "100%", maxWidth: 380, overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.3)" }}>
+        {/* Header */}
+        <div style={{ background: "#1a56db", padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ color: "#fff", fontWeight: 900, fontSize: "1rem", margin: 0 }}>QR Ph Payment</p>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.75rem", margin: "2px 0 0" }}>Scan with any Philippine banking app</p>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 8, padding: "4px 10px" }}>
+            <p style={{ color: "#fff", fontWeight: 900, fontSize: "0.9rem", margin: 0 }}>₱{amount.toFixed(2)}</p>
+          </div>
+        </div>
+
+        <div style={{ padding: "1.5rem", textAlign: "center" }}>
+          {status === "waiting" && (
+            <>
+              {/* QR Code */}
+              <div style={{ background: "#f8fafc", border: "2px solid #e2e8f0", borderRadius: 16, padding: "1rem", display: "inline-block", marginBottom: "1rem" }}>
+                <img src={qrCode} alt="QR Code" style={{ width: 200, height: 200, display: "block" }} />
+              </div>
+
+              {/* Timer */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: "1rem" }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", animation: "pulse 1.5s infinite" }} />
+                <p style={{ fontSize: "0.8rem", color: "#64748b", margin: 0 }}>
+                  Waiting for payment · Expires in <span style={{ fontWeight: 700, color: secondsLeft < 60 ? "#ef4444" : "#1a56db" }}>{mins}:{secs.toString().padStart(2, "0")}</span>
+                </p>
+              </div>
+
+              {/* Steps */}
+              <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 12, padding: "0.875rem", textAlign: "left", marginBottom: "1rem" }}>
+                <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>How to pay</p>
+                {[
+                  "Open your banking app (BPI, BDO, UnionBank, Maya, GCash, etc.)",
+                  "Go to QR Ph / InstaPay / Scan QR",
+                  "Scan the QR code above",
+                  `Confirm payment of ₱${amount.toFixed(2)}`,
+                ].map((step, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: i < 3 ? 6 : 0 }}>
+                    <span style={{ width: 18, height: 18, borderRadius: "50%", background: "#1a56db", color: "#fff", fontSize: "0.65rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                    <p style={{ fontSize: "0.75rem", color: "#334155", margin: 0, lineHeight: 1.4 }}>{step}</p>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={onClose} style={{ width: "100%", border: "1.5px solid #e2e8f0", background: "#fff", padding: "0.75rem", borderRadius: 12, fontSize: "0.85rem", fontWeight: 600, color: "#64748b", cursor: "pointer" }}>
+                Cancel Payment
+              </button>
+            </>
+          )}
+
+          {status === "paid" && (
+            <div style={{ padding: "1rem 0" }}>
+              <div style={{ width: 64, height: 64, background: "#dcfce7", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
+                <svg style={{ width: 32, height: 32, color: "#16a34a" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <p style={{ fontWeight: 900, fontSize: "1.1rem", color: "#1F2937", margin: "0 0 4px" }}>Payment Confirmed!</p>
+              <p style={{ fontSize: "0.8rem", color: "#64748b", margin: 0 }}>Redirecting to your order...</p>
+            </div>
+          )}
+
+          {status === "expired" && (
+            <div style={{ padding: "1rem 0" }}>
+              <div style={{ width: 64, height: 64, background: "#fee2e2", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
+                <svg style={{ width: 32, height: 32, color: "#ef4444" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <p style={{ fontWeight: 900, fontSize: "1.1rem", color: "#1F2937", margin: "0 0 4px" }}>QR Code Expired</p>
+              <p style={{ fontSize: "0.8rem", color: "#64748b", margin: "0 0 1rem" }}>The QR code has expired. Please try again.</p>
+              <button onClick={onClose} style={{ width: "100%", background: "#1a56db", color: "#fff", padding: "0.75rem", borderRadius: 12, fontSize: "0.85rem", fontWeight: 700, border: "none", cursor: "pointer" }}>
+                Close
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>,
     document.body

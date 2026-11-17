@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS = {
 }
 
 
-type SettingsTab = "delivery" | "commission" | "payments" | "eload" | "rental" | "listing"
+type SettingsTab = "delivery" | "commission" | "payments" | "eload" | "rental" | "listing" | "env"
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<any>(DEFAULT_SETTINGS)
@@ -37,14 +37,19 @@ export default function AdminSettingsPage() {
   const [listingConfig, setListingConfig] = useState<any>({ defaultMode: "free", defaultMinBalance: 100 })
   const [partners, setPartners] = useState<any[]>([])
   const [partnerOverrides, setPartnerOverrides] = useState<Record<string, { mode: string; min: number }>>({})
+  const [envVars, setEnvVars] = useState<Record<string, string>>({})
+  const [envSaving, setEnvSaving] = useState(false)
+  const [envSaved, setEnvSaved] = useState(false)
 
   useEffect(() => {
     async function load() {
-      const [data, pm, allPartners] = await Promise.all([
+      const [data, pm, allPartners, env] = await Promise.all([
         fetch("/api/delivery-settings").then(r => r.json()),
         fetch("/api/settings/payment-methods").then(r => r.ok ? r.json() : {}).catch(() => ({})),
         fetch("/api/users?role=partner").then(r => r.json()),
+        fetch("/api/admin/env").then(r => r.json()).catch(() => ({})),
       ])
+      setEnvVars(env)
       setSettings({ ...DEFAULT_SETTINGS, ...data })
       setPaymentMethods((prev: any) => ({ ...prev, ...pm }))
       setPartners(allPartners.filter((p: any) => p.status === "active" || p.status === "pending"))
@@ -99,6 +104,7 @@ export default function AdminSettingsPage() {
     { key: "eload", label: "E-Load", icon: "⚡" },
     { key: "rental", label: "Rentals", icon: "🔧" },
     { key: "listing", label: "Listing Mode", icon: "🏪" },
+    { key: "env", label: "Environment", icon: "⚙️" },
   ]
 
   return (
@@ -253,7 +259,6 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          {/* ═══ PAYMENTS TAB ═══ */}
           {tab === "payments" && (
             <div className="space-y-6">
               <Section title="Payment Methods" desc="Enable or disable payment options across all services (Grocery, Laundry, Home Services)">
@@ -261,9 +266,9 @@ export default function AdminSettingsPage() {
                   {([
                     { key: "cod" as const, label: "Cash on Delivery", desc: "Customer pays cash to the rider on delivery", icon: "💵", color: "green" },
                     { key: "wallet" as const, label: "Payroo Wallet", desc: "Deduct from customer's in-app wallet balance", icon: "👛", color: "purple" },
-                    { key: "qrph" as const, label: "QR Ph (InstaPay)", desc: "Scan QR code with any Philippine banking app", icon: "📱", color: "blue" },
-                    { key: "ewallet" as const, label: "E-Wallets", desc: "GrabPay, Maya, ShopeePay", icon: "📲", color: "cyan" },
-                    { key: "bank" as const, label: "Bank Transfer", desc: "BPI, UnionBank, RCBC — Direct Debit", icon: "🏦", color: "emerald" },
+                    { key: "qrph" as const, label: "QR Ph (InstaPay) — PayMongo", desc: "In-app QR code via PayMongo. Customer scans with any PH banking app.", icon: "📱", color: "blue" },
+                    { key: "ewallet" as const, label: "E-Wallets (Xendit)", desc: "GrabPay, Maya, ShopeePay via Xendit", icon: "📲", color: "cyan" },
+                    { key: "bank" as const, label: "Bank Transfer (Xendit)", desc: "BPI, UnionBank, RCBC — Direct Debit via Xendit", icon: "🏦", color: "emerald" },
                     { key: "xendit" as const, label: "Online Payment (Xendit)", desc: "All-in-one payment gateway for services", icon: "💳", color: "indigo" },
                   ]).map((pm) => (
                     <div key={pm.key} className={`flex items-center gap-4 border rounded-xl px-5 py-4 transition-all ${paymentMethods[pm.key] ? "border-green-200 bg-white shadow-sm" : "border-gray-100 bg-gray-50/50"}`}>
@@ -285,6 +290,32 @@ export default function AdminSettingsPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </Section>
+
+              <Section title="PayMongo — QR Ph Setup" desc="Required for QR Ph (InstaPay) payments on grocery checkout">
+                <div className="space-y-3">
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                    <p className="text-xs font-bold text-blue-700 mb-1">How it works</p>
+                    <p className="text-[11px] text-blue-600 leading-relaxed">When a customer selects QR Ph at checkout, an in-app QR code is generated via PayMongo. The customer scans it with any Philippine banking app (BPI, BDO, UnionBank, Maya, GCash, etc.) and pays via InstaPay. The order is automatically marked as paid.</p>
+                  </div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Webhook URL</p>
+                    <p className="text-xs text-gray-500">Register this in your <a href="https://dashboard.paymongo.com" target="_blank" className="text-blue-600 font-bold underline">PayMongo Dashboard</a> → Developers → Webhooks:</p>
+                    <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 font-mono text-xs text-gray-700 break-all select-all">
+                      https://gruwcer.com/api/paymongo/webhook
+                    </div>
+                    <p className="text-[10px] text-gray-400">Events to enable: <span className="font-bold">payment_intent.succeeded</span> · <span className="font-bold">payment.paid</span></p>
+                  </div>
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">API Key Status</p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                      <p className="text-sm font-bold text-gray-800">Test Mode</p>
+                      <span className="text-[10px] bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded-full">sk_test_...</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-2">Update <code className="bg-gray-100 px-1 rounded">PAYMONGO_SECRET_KEY</code> in the Environment tab to switch to live mode.</p>
+                  </div>
                 </div>
               </Section>
             </div>
@@ -579,6 +610,16 @@ export default function AdminSettingsPage() {
               </Section>
             </div>
           )}
+          {/* ═══ ENVIRONMENT TAB ═══ */}
+          {tab === "env" && (
+            <EnvTab envVars={envVars} setEnvVars={setEnvVars} saving={envSaving} saved={envSaved}
+              onSave={async () => {
+                setEnvSaving(true)
+                await fetch("/api/admin/env", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(envVars) })
+                setEnvSaving(false); setEnvSaved(true); setTimeout(() => setEnvSaved(false), 3000)
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -677,6 +718,150 @@ function FeeGrid({ config, onChange }: { config: any; onChange: (field: string, 
             )
           })}
         </div>
+      </div>
+    </div>
+  )
+}
+
+const ENV_GROUPS = [
+  {
+    title: "Database", desc: "PostgreSQL connection string", icon: "🗄️",
+    fields: [
+      { key: "DATABASE_URL", label: "Database URL", secret: true, placeholder: "postgresql://user:pass@host:5432/db" },
+    ],
+  },
+  {
+    title: "Authentication", desc: "JWT secret for session tokens", icon: "🔐",
+    fields: [
+      { key: "JWT_SECRET", label: "JWT Secret", secret: true, placeholder: "your_jwt_secret_here" },
+    ],
+  },
+  {
+    title: "Firebase", desc: "Phone OTP / SMS verification", icon: "🔥",
+    fields: [
+      { key: "NEXT_PUBLIC_FIREBASE_API_KEY", label: "API Key", secret: true, placeholder: "AIza..." },
+      { key: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN", label: "Auth Domain", secret: false, placeholder: "project.firebaseapp.com" },
+      { key: "NEXT_PUBLIC_FIREBASE_PROJECT_ID", label: "Project ID", secret: false, placeholder: "my-project" },
+    ],
+  },
+  {
+    title: "Xendit", desc: "Online payment gateway", icon: "💳",
+    fields: [
+      { key: "XENDIT_SECRET_KEY", label: "Secret Key", secret: true, placeholder: "xnd_production_..." },
+      { key: "NEXT_PUBLIC_XENDIT_PUBLIC_KEY", label: "Public Key", secret: false, placeholder: "xnd_public_..." },
+      { key: "XENDIT_WEBHOOK_TOKEN", label: "Webhook Token", secret: true, placeholder: "webhook_token" },
+    ],
+  },
+  {
+    title: "Google Maps", desc: "Maps & distance calculations", icon: "🗺️",
+    fields: [
+      { key: "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY", label: "API Key", secret: true, placeholder: "AIza..." },
+    ],
+  },
+  {
+    title: "Store", desc: "Platform store identifier", icon: "🏪",
+    fields: [
+      { key: "NEXT_PUBLIC_STORE_ID", label: "Store ID", secret: false, placeholder: "8807" },
+    ],
+  },
+  {
+    title: "GBits E-Load API", desc: "Mobile load provider credentials", icon: "⚡",
+    fields: [
+      { key: "GBITS_API_URL", label: "API URL", secret: false, placeholder: "https://api.gbits.ph" },
+      { key: "GBITS_BUSINESS_ID", label: "Business ID", secret: false, placeholder: "uuid" },
+      { key: "GBITS_BUSINESS_CODE", label: "Business Code", secret: false, placeholder: "XXXX" },
+      { key: "GBITS_USERNAME", label: "Username", secret: false, placeholder: "email@example.com" },
+      { key: "GBITS_PASSWORD", label: "Password", secret: true, placeholder: "••••••••" },
+    ],
+  },
+  {
+    title: "PayMongo", desc: "E-Load payment processing", icon: "💰",
+    fields: [
+      { key: "PAYMONGO_SECRET_KEY", label: "Secret Key", secret: true, placeholder: "sk_live_... or sk_test_..." },
+    ],
+  },
+  {
+    title: "Cloudflare R2", desc: "Image & file storage", icon: "☁️",
+    fields: [
+      { key: "R2_ACCOUNT_ID", label: "Account ID", secret: false, placeholder: "account_id" },
+      { key: "R2_ACCESS_KEY_ID", label: "Access Key ID", secret: true, placeholder: "access_key_id" },
+      { key: "R2_SECRET_ACCESS_KEY", label: "Secret Access Key", secret: true, placeholder: "secret_access_key" },
+      { key: "R2_BUCKET_NAME", label: "Bucket Name", secret: false, placeholder: "my-bucket" },
+      { key: "R2_PUBLIC_URL", label: "Public URL", secret: false, placeholder: "https://images.example.com" },
+      { key: "NEXT_PUBLIC_R2_URL", label: "Public URL (client)", secret: false, placeholder: "https://images.example.com" },
+    ],
+  },
+]
+
+function EnvTab({ envVars, setEnvVars, saving, saved, onSave }: {
+  envVars: Record<string, string>
+  setEnvVars: (v: Record<string, string>) => void
+  saving: boolean
+  saved: boolean
+  onSave: () => void
+}) {
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({})
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
+        <span className="text-xl shrink-0">⚠️</span>
+        <div>
+          <p className="text-sm font-bold text-amber-800">Changes take effect after server restart</p>
+          <p className="text-[11px] text-amber-700 mt-0.5">Saving writes directly to the <code className="bg-amber-100 px-1 rounded">.env</code> file on disk. Restart the Node.js process (pm2 restart / redeploy) for new values to load.</p>
+        </div>
+      </div>
+
+      {ENV_GROUPS.map((group) => (
+        <Section key={group.title} title={`${group.icon} ${group.title}`} desc={group.desc}>
+          <div className="space-y-4">
+            {group.fields.map((f) => {
+              const isRevealed = revealed[f.key]
+              return (
+                <div key={f.key}>
+                  <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">{f.label}</label>
+                  <div className="relative">
+                    <input
+                      type={f.secret && !isRevealed ? "password" : "text"}
+                      value={envVars[f.key] ?? ""}
+                      placeholder={f.placeholder}
+                      onChange={(e) => setEnvVars({ ...envVars, [f.key]: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-mono outline-none focus:border-[#16A34A] pr-20"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                      {f.secret && (
+                        <button
+                          type="button"
+                          onClick={() => setRevealed((r) => ({ ...r, [f.key]: !r[f.key] }))}
+                          className="text-[10px] text-gray-400 hover:text-gray-600 px-1.5 py-0.5 rounded border border-gray-200 bg-white"
+                        >
+                          {isRevealed ? "hide" : "show"}
+                        </button>
+                      )}
+                      <span className="text-[9px] font-mono text-gray-300 select-all">{f.key.startsWith("NEXT_PUBLIC_") ? "public" : "server"}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Section>
+      ))}
+
+      <div className="flex justify-end">
+        <button
+          onClick={onSave}
+          disabled={saving}
+          className="flex items-center gap-2 bg-[#16A34A] text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-[#15803d] transition-colors disabled:opacity-50 shadow-sm"
+        >
+          {saving ? (
+            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+          ) : saved ? (
+            <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg> Saved to .env!</>
+          ) : (
+            "Save Environment Variables"
+          )}
+        </button>
       </div>
     </div>
   )
