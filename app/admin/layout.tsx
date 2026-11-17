@@ -33,6 +33,8 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [adminName, setAdminName] = useState("")
+  const [adminEmail, setAdminEmail] = useState("")
   const [pendingGrocery, setPendingGrocery] = useState(0)
   const [pendingLaundry, setPendingLaundry] = useState(0)
   const [pendingPartners, setPendingPartners] = useState(0)
@@ -86,9 +88,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null
     if (!token && pathname !== "/admin/login") {
-      router.push("/admin/login")
+      router.replace("/admin/login")
     } else {
       setAuthenticated(true)
+      try {
+        const u = JSON.parse(localStorage.getItem("user") || "{}")
+        setAdminName(u.name || "Admin")
+        setAdminEmail(u.email || "")
+      } catch {}
     }
     setChecking(false)
   }, [router, pathname])
@@ -96,7 +103,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   function handleLogout() {
     clearAuth()
     localStorage.removeItem("admin_token")
-    router.push("/admin/login")
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    router.replace("/admin/login")
   }
 
   // Don't show layout for login page
@@ -107,14 +116,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-[#F4F5F7] flex">
       {/* SIDEBAR */}
-      <aside className="hidden md:flex flex-col w-[240px] bg-white border-r border-gray-200 fixed h-full z-30">
-        <div className="p-5 border-b border-gray-100">
-          <a href="/" className="flex items-center gap-2">
+      <aside className="hidden md:flex flex-col w-[240px] bg-white border-r border-gray-200 fixed h-full z-30 overflow-hidden">
+        <div className="p-5 border-b border-gray-100 shrink-0">
+          <a href="/" className="flex items-center gap-2 mb-3">
             <span className="font-black text-sm text-[#1F2937] tracking-tight">Payroo</span>
             <span className="text-[10px] text-gray-400">Admin</span>
           </a>
+          {adminName && (
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+              <div className="w-7 h-7 bg-[#16A34A] rounded-full flex items-center justify-center shrink-0">
+                <span className="text-white text-[11px] font-black">{adminName.charAt(0).toUpperCase()}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-gray-800 truncate">{adminName}</p>
+                <p className="text-[10px] text-gray-400 truncate">{adminEmail}</p>
+              </div>
+            </div>
+          )}
         </div>
-        <nav className="flex-1 p-3">
+        <nav className="flex-1 p-3 overflow-y-auto">
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Management</p>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))
@@ -140,8 +160,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )
           })}
         </nav>
-        <div className="p-3 border-t border-gray-100">
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-green-50 hover:text-[#16A34A] text-sm transition-colors">
+        <div className="p-3 border-t border-gray-100 shrink-0">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 text-sm transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             Logout
           </button>
